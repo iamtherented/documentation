@@ -4,8 +4,8 @@
   "name": "Synera Guide",
   "colors": {
     "primary": "#084397",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "light": "#1b67d4",
+    "dark": "#1b67d4"
   },
   "favicon": "/favicon.svg",
   "navigation": {
