@@ -1,9 +1,9 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Synera Guide",
   "colors": {
-    "primary": "#16A34A",
+    "primary": "#084397",
     "light": "#07C983",
     "dark": "#15803D"
   },
@@ -58,17 +58,17 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
+          "anchor": "Setup",
           "href": "https://mintlify.com/docs",
           "icon": "book-open-cover"
         },
         {
-          "anchor": "Community",
+          "anchor": "Terms Of Service",
           "href": "https://mintlify.com/community",
           "icon": "slack"
         },
         {
-          "anchor": "Blog",
+          "anchor": "Support",
           "href": "https://mintlify.com/blog",
           "icon": "newspaper"
         }
