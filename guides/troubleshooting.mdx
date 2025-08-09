@@ -1,0 +1,673 @@
+---
+title: 'Troubleshooting Guide'
+description: 'Common issues and their solutions when using Synera'
+icon: 'wrench'
+---
+
+## Quick Diagnostics
+
+Before diving into specific issues, run these quick diagnostic commands:
+
+<CardGroup cols={2}>
+  <Card title="Bot Status Check" icon="heartbeat">
+    ```bash
+    /status
+    ```
+    Check if Synera is online and responding properly
+  </Card>
+  <Card title="Connection Test" icon="wifi">
+    ```bash
+    /test connection
+    ```
+    Verify Discord and Roblox API connectivity
+  </Card>
+  <Card title="Permission Check" icon="shield-check">
+    ```bash
+    /permissions check user:@yourself
+    ```
+    Verify your current permissions and access levels
+  </Card>
+  <Card title="Configuration Review" icon="cog">
+    ```bash
+    /config status
+    ```
+    Review current bot configuration and settings
+  </Card>
+</CardGroup>
+
+## Common Issues
+
+### Authentication Problems
+
+<AccordionGroup>
+  <Accordion title="Invalid Roblox Cookie" icon="cookie">
+    **Symptoms:**
+    - "Authentication failed" errors
+    - Commands fail with "Invalid credentials"
+    - Bot cannot access group information
+    
+    **Causes:**
+    - Cookie has expired or been invalidated
+    - Incorrect cookie format or incomplete copy
+    - Account logged out from another location
+    - Roblox security measures triggered
+    
+    **Solutions:**
+    <Steps>
+      <Step title="Get Fresh Cookie">
+        1. Log out of Roblox completely
+        2. Clear browser cookies for Roblox
+        3. Log back in to Roblox
+        4. Get a new `.ROBLOSECURITY` cookie
+      </Step>
+      <Step title="Verify Cookie Format">
+        Ensure the cookie starts with:
+        ```
+        _|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_
+        ```
+      </Step>
+      <Step title="Update in Synera">
+        ```bash
+        /setup_community update_auth method:cookie
+        ```
+        Follow the prompts to securely update your authentication
+      </Step>
+      <Step title="Test Connection">
+        ```bash
+        /test connection roblox
+        ```
+        Verify the new authentication works
+      </Step>
+    </Steps>
+  </Accordion>
+  
+  <Accordion title="Insufficient Group Permissions" icon="user-slash">
+    **Symptoms:**
+    - "Access denied" when trying to rank members
+    - "Insufficient permissions" errors
+    - Can view group info but cannot modify ranks
+    
+    **Causes:**
+    - Account doesn't have admin permissions in the group
+    - Group settings restrict API access
+    - Account was demoted or permissions changed
+    
+    **Solutions:**
+    1. **Verify Group Role:**
+       - Check your rank in the Roblox group
+       - Ensure you have "Manage Members" permissions
+       - Confirm you can manually rank members on Roblox
+    
+    2. **Check Group Settings:**
+       - Verify group allows API access
+       - Check if group has restricted member management
+       - Ensure group isn't in "locked" mode
+    
+    3. **Test Manually:**
+       - Try ranking someone manually on Roblox website
+       - If manual ranking fails, the issue is with Roblox permissions
+       - Contact group owner to restore permissions
+  </Accordion>
+  
+  <Accordion title="Discord Permission Issues" icon="discord">
+    **Symptoms:**
+    - Bot cannot assign roles
+    - "Missing permissions" errors in Discord
+    - Role synchronization fails
+    
+    **Causes:**
+    - Bot missing required Discord permissions
+    - Bot role positioned below target roles
+    - Server permission overrides blocking bot
+    
+    **Solutions:**
+    1. **Check Bot Permissions:**
+       ```
+       Required permissions:
+       ✅ Manage Roles
+       ✅ Send Messages
+       ✅ Use Slash Commands
+       ✅ Read Message History
+       ✅ Embed Links
+       ```
+    
+    2. **Fix Role Hierarchy:**
+       - Move Synera's role above all roles it needs to manage
+       - Ensure bot role has higher position than target roles
+       - Check for channel-specific permission overrides
+    
+    3. **Re-invite Bot:**
+       If permissions are severely broken, re-invite with correct permissions:
+       ```
+       https://discord.com/oauth2/authorize?client_id=BOT_ID&permissions=268435456&scope=bot%20applications.commands
+       ```
+  </Accordion>
+</AccordionGroup>
+
+### Command Issues
+
+<AccordionGroup>
+  <Accordion title="Slash Commands Not Appearing" icon="terminal">
+    **Symptoms:**
+    - Commands don't show up when typing `/`
+    - "Unknown command" errors
+    - Commands worked before but disappeared
+    
+    **Causes:**
+    - Discord hasn't synced commands yet
+    - Bot missing "Use Slash Commands" permission
+    - Server-specific command registration issues
+    - Bot was offline during command registration
+    
+    **Solutions:**
+    <Steps>
+      <Step title="Wait for Sync">
+        Discord can take up to 1 hour to sync slash commands globally. Wait and try again.
+      </Step>
+      <Step title="Check Permissions">
+        Ensure bot has "Use Slash Commands" permission in server settings.
+      </Step>
+      <Step title="Force Refresh">
+        ```bash
+        # Try in DMs with the bot first
+        /help
+        
+        # If that works, the issue is server-specific
+        ```
+      </Step>
+      <Step title="Re-invite Bot">
+        If commands still don't appear after 1 hour, re-invite the bot with proper permissions.
+      </Step>
+    </Steps>
+  </Accordion>
+  
+  <Accordion title="Commands Timing Out" icon="clock">
+    **Symptoms:**
+    - "This interaction failed" messages
+    - Commands take too long to respond
+    - Partial command execution
+    
+    **Causes:**
+    - Roblox API slowness or downtime
+    - Large group operations taking too long
+    - Network connectivity issues
+    - Bot overloaded with requests
+    
+    **Solutions:**
+    1. **Check Service Status:**
+       - Verify Roblox API status
+       - Check Synera status page
+       - Test with simple commands first
+    
+    2. **Reduce Operation Size:**
+       ```bash
+       # Instead of mass operations, try smaller batches
+       /massrank users:@user1,@user2 rank:Member
+       # Rather than 20+ users at once
+       ```
+    
+    3. **Retry Later:**
+       - Wait a few minutes and try again
+       - Use `/status` to check bot health
+       - Contact support if issues persist
+  </Accordion>
+  
+  <Accordion title="Ranking Commands Failing" icon="chart-line">
+    **Symptoms:**
+    - "Failed to rank member" errors
+    - Ranks not updating in Roblox
+    - Discord roles not syncing
+    
+    **Causes:**
+    - Target member not in Roblox group
+    - Attempting to rank to invalid rank
+    - Rate limits exceeded
+    - Hierarchy violations
+    
+    **Solutions:**
+    1. **Verify Target Member:**
+       ```bash
+       /memberinfo user:@target
+       ```
+       Check if they're in the group and their current rank
+    
+    2. **Check Rank Validity:**
+       ```bash
+       /groupinfo
+       ```
+       Verify the target rank exists and you can rank to it
+    
+    3. **Respect Hierarchy:**
+       - Cannot rank members higher than your own rank
+       - Cannot rank other admins (unless you're owner)
+       - Check rank restrictions in your group
+    
+    4. **Wait for Rate Limits:**
+       If you've been ranking many members, wait a few minutes for rate limits to reset
+  </Accordion>
+</AccordionGroup>
+
+### Synchronization Issues
+
+<AccordionGroup>
+  <Accordion title="Discord Roles Not Syncing" icon="arrows-rotate">
+    **Symptoms:**
+    - Member's Discord role doesn't match Roblox rank
+    - New members not getting roles automatically
+    - Role updates delayed or missing
+    
+    **Causes:**
+    - Role mapping configuration issues
+    - Bot cannot manage certain roles
+    - Member not verified with Roblox account
+    - Sync settings disabled
+    
+    **Solutions:**
+    1. **Check Role Mapping:**
+       ```bash
+       /config view role_mapping
+       ```
+       Verify roles are mapped correctly to ranks
+    
+    2. **Manual Sync:**
+       ```bash
+       /sync user:@member
+       # or
+       /sync all
+       ```
+    
+    3. **Verify Member Account:**
+       ```bash
+       /memberinfo user:@member
+       ```
+       Check if their Roblox account is linked and verified
+    
+    4. **Check Auto-Sync Settings:**
+       ```bash
+       /config view auto_sync
+       ```
+       Ensure automatic synchronization is enabled
+  </Accordion>
+  
+  <Accordion title="Roblox Ranks Not Updating" icon="cube">
+    **Symptoms:**
+    - Discord shows rank change but Roblox doesn't
+    - Commands succeed but no actual rank change
+    - Inconsistent rank updates
+    
+    **Causes:**
+    - Roblox API delays or issues
+    - Authentication problems
+    - Group permission changes
+    - Roblox maintenance or downtime
+    
+    **Solutions:**
+    1. **Check Roblox Status:**
+       Visit Roblox status page to check for ongoing issues
+    
+    2. **Verify Authentication:**
+       ```bash
+       /test connection roblox
+       ```
+    
+    3. **Manual Verification:**
+       Check the member's rank directly on Roblox website
+    
+    4. **Retry Operation:**
+       ```bash
+       /rank user:@member rank:TargetRank reason:"Retry after sync issue"
+       ```
+  </Accordion>
+  
+  <Accordion title="Data Inconsistencies" icon="database">
+    **Symptoms:**
+    - Bot shows different information than Roblox
+    - Cached data appears outdated
+    - Member information doesn't match reality
+    
+    **Causes:**
+    - Caching issues
+    - Database synchronization problems
+    - Recent changes not yet propagated
+    - Manual changes made outside of bot
+    
+    **Solutions:**
+    1. **Force Cache Refresh:**
+       ```bash
+       /cache refresh scope:member user:@member
+       /cache refresh scope:group
+       ```
+    
+    2. **Clear Cached Data:**
+       ```bash
+       /cache clear type:member_data
+       ```
+    
+    3. **Full Resync:**
+       ```bash
+       /sync all force:true
+       ```
+       This will re-fetch all data from authoritative sources
+  </Accordion>
+</AccordionGroup>
+
+## Error Messages & Solutions
+
+### Common Error Messages
+
+<Tabs>
+  <Tab title="Authentication Errors">
+    **"Invalid authentication credentials"**
+    - Your Roblox cookie has expired
+    - Solution: Update authentication with `/setup_community update_auth`
+    
+    **"Access denied - insufficient permissions"**
+    - Your Roblox account lacks group admin permissions
+    - Solution: Contact group owner to restore permissions
+    
+    **"Authentication token expired"**
+    - Session has timed out
+    - Solution: Re-authenticate using setup command
+  </Tab>
+  
+  <Tab title="Permission Errors">
+    **"You don't have permission to use this command"**
+    - Your Discord role lacks required permissions
+    - Solution: Contact server admin to grant appropriate role
+    
+    **"Cannot rank members higher than your own rank"**
+    - Attempting to violate rank hierarchy
+    - Solution: Only rank members to positions below your rank
+    
+    **"Missing Discord permissions: Manage Roles"**
+    - Bot lacks required Discord permissions
+    - Solution: Re-invite bot with correct permissions
+  </Tab>
+  
+  <Tab title="Operation Errors">
+    **"Member not found in group"**
+    - Target member is not in the Roblox group
+    - Solution: Verify member is in group or invite them first
+    
+    **"Invalid rank specified"**
+    - Rank name doesn't exist in group
+    - Solution: Use `/groupinfo` to see valid ranks
+    
+    **"Rate limit exceeded"**
+    - Too many operations performed recently
+    - Solution: Wait a few minutes before trying again
+  </Tab>
+</Tabs>
+
+## Performance Issues
+
+### Slow Response Times
+
+<AccordionGroup>
+  <Accordion title="Identifying Performance Issues" icon="gauge">
+    **Symptoms:**
+    - Commands take longer than 5 seconds to respond
+    - Frequent timeout errors
+    - Bot appears unresponsive
+    
+    **Diagnostic Commands:**
+    ```bash
+    /status performance
+    /test latency
+    /debug performance user:@yourself
+    ```
+  </Accordion>
+  
+  <Accordion title="Common Causes & Solutions" icon="zap">
+    **High Server Load:**
+    - Many users using bot simultaneously
+    - Solution: Commands are queued, wait for your turn
+    
+    **Roblox API Slowness:**
+    - Roblox experiencing high traffic or issues
+    - Solution: Check Roblox status, wait and retry
+    
+    **Large Group Operations:**
+    - Mass ranking or syncing large groups
+    - Solution: Break operations into smaller batches
+    
+    **Network Issues:**
+    - Connectivity problems between services
+    - Solution: Check your internet connection, try again later
+  </Accordion>
+</AccordionGroup>
+
+### Memory and Resource Issues
+
+<AccordionGroup>
+  <Accordion title="Bot Appearing Offline" icon="power-off">
+    **Possible Causes:**
+    - Bot restart or maintenance
+    - Discord API issues
+    - Server overload
+    
+    **Solutions:**
+    1. Wait 5-10 minutes for automatic recovery
+    2. Check Synera status page
+    3. Contact support if offline for >30 minutes
+  </Accordion>
+  
+  <Accordion title="Inconsistent Behavior" icon="shuffle">
+    **Symptoms:**
+    - Commands work sometimes but not others
+    - Different results for same command
+    - Intermittent failures
+    
+    **Solutions:**
+    1. Clear your Discord cache
+    2. Try commands in different channels
+    3. Check for server-specific issues
+    4. Report pattern to support team
+  </Accordion>
+</AccordionGroup>
+
+## Advanced Troubleshooting
+
+### Debug Mode
+
+Enable debug mode for detailed error information:
+
+```bash
+# Enable debug mode for your user
+/debug enable user:@yourself duration:1h
+
+# Run problematic command with debug enabled
+/rank user:@member rank:Moderator reason:"Debug test"
+
+# View debug logs
+/debug logs user:@yourself limit:10
+
+# Disable debug mode
+/debug disable user:@yourself
+```
+
+### Log Analysis
+
+Access detailed logs for troubleshooting:
+
+<Tabs>
+  <Tab title="Command Logs">
+    ```bash
+    # View recent command history
+    /logs commands user:@yourself limit:20
+
+    # View failed commands only
+    /logs commands status:failed limit:10
+
+    # View logs for specific command
+    /logs commands command:rank limit:15
+    ```
+  </Tab>
+  
+  <Tab title="Error Logs">
+    ```bash
+    # View recent errors
+    /logs errors limit:10
+
+    # View errors for specific user
+    /logs errors user:@member limit:5
+
+    # View errors by type
+    /logs errors type:authentication limit:10
+    ```
+  </Tab>
+  
+  <Tab title="System Logs">
+    ```bash
+    # View system health logs
+    /logs system component:roblox_api limit:10
+
+    # View performance logs
+    /logs system component:performance limit:15
+
+    # View sync operation logs
+    /logs system component:sync limit:20
+    ```
+  </Tab>
+</Tabs>
+
+### Configuration Validation
+
+Validate your bot configuration:
+
+```bash
+# Check overall configuration health
+/config validate
+
+# Validate specific configuration sections
+/config validate section:permissions
+/config validate section:role_mapping
+/config validate section:authentication
+
+# Test configuration with dry run
+/config test command:promote user:@testuser rank:Member dry_run:true
+```
+
+## Getting Help
+
+### Self-Service Resources
+
+<CardGroup cols={2}>
+  <Card title="Built-in Help" icon="question-circle">
+    ```bash
+    /help
+    /help command:rank
+    /faq
+    ```
+  </Card>
+  <Card title="Status Checks" icon="heartbeat">
+    ```bash
+    /status
+    /status detailed
+    /test all
+    ```
+  </Card>
+  <Card title="Documentation" icon="book">
+    - Check this documentation
+    - Review command examples
+    - Read best practices guides
+  </Card>
+  <Card title="Community" icon="users">
+    - Join our Discord server
+    - Search previous discussions
+    - Ask community members
+  </Card>
+</CardGroup>
+
+### Contacting Support
+
+When contacting support, please include:
+
+<AccordionGroup>
+  <Accordion title="Required Information" icon="info-circle">
+    1. **Server Information:**
+       - Discord server ID
+       - Roblox group ID
+       - Bot configuration (use `/config export`)
+    
+    2. **Issue Details:**
+       - Exact error messages
+       - Steps to reproduce
+       - When the issue started
+       - What you were trying to accomplish
+    
+    3. **Debug Information:**
+       - Recent command logs (`/logs commands limit:10`)
+       - Error logs if available (`/logs errors limit:5`)
+       - System status (`/status detailed`)
+  </Accordion>
+  
+  <Accordion title="Support Channels" icon="headset">
+    **Discord Support Server:**
+    - Join: [discord.gg/synera](https://discord.gg/synera)
+    - Use #support channel
+    - Fastest response time
+    
+    **Email Support:**
+    - General: [team@synera.cc](mailto:team@synera.cc)
+    - Technical: [support@synera.cc](mailto:support@synera.cc)
+    - Business: [business@synera.cc](mailto:business@synera.cc)
+    
+    **Priority Support:**
+    - Available for premium users
+    - Guaranteed response within 4 hours
+    - Direct access to development team
+  </Accordion>
+</AccordionGroup>
+
+### Emergency Procedures
+
+For critical issues affecting your community:
+
+<Steps>
+  <Step title="Immediate Actions">
+    1. Document the issue with screenshots
+    2. Try basic troubleshooting steps
+    3. Check if issue affects all users or just some
+  </Step>
+  <Step title="Temporary Workarounds">
+    1. Use manual Roblox ranking if needed
+    2. Disable automatic sync if causing issues
+    3. Restrict bot usage to admins only
+  </Step>
+  <Step title="Contact Emergency Support">
+    1. Join Discord support server
+    2. Use @Emergency ping in #support
+    3. Provide all required information
+    4. Stay available for follow-up questions
+  </Step>
+  <Step title="Follow Up">
+    1. Test provided solutions
+    2. Confirm issue resolution
+    3. Update your documentation
+    4. Consider preventive measures
+  </Step>
+</Steps>
+
+---
+
+<Note>
+  Most issues can be resolved quickly with basic troubleshooting. If you're still experiencing problems after trying these solutions, don't hesitate to reach out to our support team.
+</Note>
+
+## Prevention Tips
+
+<CardGroup cols={2}>
+  <Card title="Regular Maintenance" icon="calendar-check">
+    - Review bot logs weekly
+    - Test critical functions monthly
+    - Update authentication credentials regularly
+    - Monitor performance metrics
+  </Card>
+  <Card title="Best Practices" icon="star">
+    - Keep bot permissions minimal but sufficient
+    - Document configuration changes
+    - Train staff on proper bot usage
+    - Have backup procedures ready
+  </Card>
+</CardGroup>

@@ -1,0 +1,440 @@
+---
+title: 'Discord Integration'
+description: 'How Synera seamlessly integrates with your Discord server'
+icon: 'discord'
+---
+
+## Discord Bot Architecture
+
+Synera operates as a sophisticated Discord bot that leverages modern Discord features to provide seamless group management capabilities.
+
+## Slash Commands
+
+Synera exclusively uses Discord's slash command system for better user experience and security:
+
+### Command Categories
+
+<Tabs>
+  <Tab title="Ranking Commands">
+    <div className="space-y-4">
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h4 className="font-semibold text-lg mb-2">/rank</h4>
+        <p className="text-gray-600 dark:text-gray-400 mb-2">Set a member to a specific rank</p>
+        <code className="text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+          /rank user:@member rank:Moderator reason:"Promotion"
+        </code>
+      </div>
+      
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h4 className="font-semibold text-lg mb-2">/promote</h4>
+        <p className="text-gray-600 dark:text-gray-400 mb-2">Promote a member by one rank</p>
+        <code className="text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+          /promote user:@member reason:"Good performance"
+        </code>
+      </div>
+      
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h4 className="font-semibold text-lg mb-2">/demote</h4>
+        <p className="text-gray-600 dark:text-gray-400 mb-2">Demote a member by one rank</p>
+        <code className="text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+          /demote user:@member reason:"Policy violation"
+        </code>
+      </div>
+    </div>
+  </Tab>
+  
+  <Tab title="Information Commands">
+    <div className="space-y-4">
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h4 className="font-semibold text-lg mb-2">/memberinfo</h4>
+        <p className="text-gray-600 dark:text-gray-400 mb-2">Get detailed member information</p>
+        <code className="text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+          /memberinfo user:@member
+        </code>
+      </div>
+      
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h4 className="font-semibold text-lg mb-2">/groupinfo</h4>
+        <p className="text-gray-600 dark:text-gray-400 mb-2">Display group statistics and structure</p>
+        <code className="text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+          /groupinfo
+        </code>
+      </div>
+      
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h4 className="font-semibold text-lg mb-2">/rankhistory</h4>
+        <p className="text-gray-600 dark:text-gray-400 mb-2">View a member's ranking history</p>
+        <code className="text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+          /rankhistory user:@member limit:10
+        </code>
+      </div>
+    </div>
+  </Tab>
+  
+  <Tab title="Management Commands">
+    <div className="space-y-4">
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h4 className="font-semibold text-lg mb-2">/setup_community</h4>
+        <p className="text-gray-600 dark:text-gray-400 mb-2">Initial setup for connecting your Roblox group</p>
+        <code className="text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+          /setup_community group_id:123456
+        </code>
+      </div>
+      
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h4 className="font-semibold text-lg mb-2">/config</h4>
+        <p className="text-gray-600 dark:text-gray-400 mb-2">Configure bot settings and permissions</p>
+        <code className="text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+          /config setting:auto_sync value:enabled
+        </code>
+      </div>
+      
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h4 className="font-semibold text-lg mb-2">/sync</h4>
+        <p className="text-gray-600 dark:text-gray-400 mb-2">Manually synchronize Discord roles with Roblox ranks</p>
+        <code className="text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+          /sync target:all
+        </code>
+      </div>
+    </div>
+  </Tab>
+</Tabs>
+
+## Role Management
+
+Synera automatically manages Discord roles to keep them synchronized with Roblox group ranks.
+
+### Automatic Role Assignment
+
+<div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 my-6">
+  <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4">How Role Sync Works</h3>
+  <div className="space-y-3">
+    <div className="flex items-start space-x-3">
+      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">1</div>
+      <div>
+        <p className="font-medium">Member joins Discord server</p>
+        <p className="text-sm text-blue-700 dark:text-blue-300">Synera detects new member and checks their Roblox account</p>
+      </div>
+    </div>
+    <div className="flex items-start space-x-3">
+      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">2</div>
+      <div>
+        <p className="font-medium">Roblox rank verification</p>
+        <p className="text-sm text-blue-700 dark:text-blue-300">Bot queries Roblox API to determine member's current group rank</p>
+      </div>
+    </div>
+    <div className="flex items-start space-x-3">
+      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">3</div>
+      <div>
+        <p className="font-medium">Role assignment</p>
+        <p className="text-sm text-blue-700 dark:text-blue-300">Corresponding Discord role is automatically assigned based on rank mapping</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+### Role Mapping Configuration
+
+Configure how Roblox ranks correspond to Discord roles:
+
+```json
+{
+  "role_mapping": {
+    "255": {
+      "roblox_rank": "Owner",
+      "discord_role": "Group Owner",
+      "color": "#ff0000",
+      "permissions": ["administrator"]
+    },
+    "200": {
+      "roblox_rank": "Co-Owner",
+      "discord_role": "Co-Owner",
+      "color": "#ff6600",
+      "permissions": ["manage_guild", "manage_roles"]
+    },
+    "150": {
+      "roblox_rank": "Administrator",
+      "discord_role": "Admin",
+      "color": "#ffaa00",
+      "permissions": ["manage_messages", "kick_members"]
+    },
+    "100": {
+      "roblox_rank": "Moderator",
+      "discord_role": "Moderator",
+      "color": "#00ff00",
+      "permissions": ["manage_messages"]
+    }
+  }
+}
+```
+
+## Rich Embeds & Responses
+
+Synera uses Discord's rich embed system to provide informative and visually appealing responses:
+
+### Command Response Examples
+
+<Tabs>
+  <Tab title="Successful Ranking">
+    ```json
+    {
+      "title": "✅ Member Ranked Successfully",
+      "description": "JohnDoe has been promoted to Moderator",
+      "color": "#00ff00",
+      "fields": [
+        {
+          "name": "Previous Rank",
+          "value": "Member (50)",
+          "inline": true
+        },
+        {
+          "name": "New Rank", 
+          "value": "Moderator (100)",
+          "inline": true
+        },
+        {
+          "name": "Reason",
+          "value": "Excellent performance and dedication",
+          "inline": false
+        }
+      ],
+      "footer": {
+        "text": "Ranked by AdminUser • Today at 2:30 PM"
+      }
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Member Information">
+    ```json
+    {
+      "title": "👤 Member Information",
+      "description": "Detailed information for JohnDoe",
+      "color": "#0099ff",
+      "thumbnail": {
+        "url": "https://www.roblox.com/headshot-thumbnail/image?userId=123456789&width=420&height=420&format=png"
+      },
+      "fields": [
+        {
+          "name": "Roblox Username",
+          "value": "JohnDoe_Official",
+          "inline": true
+        },
+        {
+          "name": "Current Rank",
+          "value": "Moderator (100)",
+          "inline": true
+        },
+        {
+          "name": "Join Date",
+          "value": "January 15, 2024",
+          "inline": true
+        },
+        {
+          "name": "Last Ranked",
+          "value": "3 days ago",
+          "inline": true
+        }
+      ]
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Error Messages">
+    ```json
+    {
+      "title": "❌ Ranking Failed",
+      "description": "Unable to rank the specified member",
+      "color": "#ff0000",
+      "fields": [
+        {
+          "name": "Error",
+          "value": "Insufficient permissions",
+          "inline": false
+        },
+        {
+          "name": "Solution",
+          "value": "You cannot rank members to positions higher than your own rank",
+          "inline": false
+        }
+      ],
+      "footer": {
+        "text": "Need help? Join our support server"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Interactive Components
+
+Synera leverages Discord's interactive components for enhanced user experience:
+
+### Button Interactions
+
+<AccordionGroup>
+  <Accordion title="Confirmation Buttons" icon="check-circle">
+    For sensitive operations like demotions or mass rankings, Synera presents confirmation buttons:
+    
+    - ✅ **Confirm**: Proceed with the action
+    - ❌ **Cancel**: Abort the operation
+    - ℹ️ **Details**: View more information about the action
+  </Accordion>
+  
+  <Accordion title="Navigation Buttons" icon="arrows-left-right">
+    For paginated results like member lists or ranking history:
+    
+    - ⬅️ **Previous**: Go to previous page
+    - ➡️ **Next**: Go to next page
+    - 🏠 **Home**: Return to first page
+    - 🔢 **Jump**: Jump to specific page
+  </Accordion>
+  
+  <Accordion title="Action Buttons" icon="cursor-pointer">
+    Quick action buttons for common operations:
+    
+    - 📈 **Promote**: Quick promote button
+    - 📉 **Demote**: Quick demote button
+    - 🔄 **Sync**: Resync member roles
+    - 📊 **Stats**: View detailed statistics
+  </Accordion>
+</AccordionGroup>
+
+### Select Menus
+
+For operations requiring selection from multiple options:
+
+```javascript
+// Example: Rank selection menu
+{
+  "type": 3, // SELECT_MENU
+  "custom_id": "rank_select",
+  "placeholder": "Choose a rank...",
+  "options": [
+    {
+      "label": "Member",
+      "value": "50",
+      "description": "Basic group member",
+      "emoji": "👤"
+    },
+    {
+      "label": "Moderator", 
+      "value": "100",
+      "description": "Community moderator",
+      "emoji": "🛡️"
+    },
+    {
+      "label": "Administrator",
+      "value": "150", 
+      "description": "Server administrator",
+      "emoji": "⚡"
+    }
+  ]
+}
+```
+
+## Permissions & Security
+
+### Discord Permission Requirements
+
+Synera requires specific Discord permissions to function properly:
+
+<CardGroup cols={2}>
+  <Card title="Essential Permissions" icon="key">
+    - **Send Messages**: Basic communication
+    - **Use Slash Commands**: Command functionality
+    - **Embed Links**: Rich responses
+    - **Read Message History**: Context awareness
+  </Card>
+  <Card title="Role Management" icon="users-gear">
+    - **Manage Roles**: Automatic role assignment
+    - **View Audit Log**: Security monitoring
+    - **Manage Nicknames**: Username synchronization
+    - **Moderate Members**: Advanced features
+  </Card>
+</CardGroup>
+
+### Command Permissions
+
+Configure which Discord roles can use specific commands:
+
+```yaml
+permissions:
+  ranking_commands:
+    required_roles: ["Admin", "Moderator"]
+    blacklisted_roles: ["Muted", "Restricted"]
+    
+  information_commands:
+    required_roles: ["Member"]
+    channel_restrictions: ["#bot-commands", "#staff-only"]
+    
+  management_commands:
+    required_roles: ["Owner", "Co-Owner"]
+    require_confirmation: true
+```
+
+## Event Handling
+
+Synera responds to various Discord events to maintain synchronization:
+
+### Member Events
+
+<Steps>
+  <Step title="Member Join">
+    When a new member joins the Discord server, Synera automatically checks their Roblox account and assigns appropriate roles
+  </Step>
+  <Step title="Member Leave">
+    Logs member departures and optionally removes them from Roblox group if configured
+  </Step>
+  <Step title="Role Changes">
+    Monitors Discord role changes and synchronizes with Roblox ranks when necessary
+  </Step>
+  <Step title="Nickname Updates">
+    Tracks nickname changes and can enforce Roblox username synchronization
+  </Step>
+</Steps>
+
+### Server Events
+
+- **Guild Updates**: Responds to server setting changes
+- **Channel Events**: Adapts to channel creation/deletion
+- **Permission Changes**: Updates command availability based on role permissions
+
+## Logging & Monitoring
+
+### Activity Logs
+
+Synera maintains comprehensive logs of all Discord interactions:
+
+```json
+{
+  "timestamp": "2024-01-15T10:30:00Z",
+  "event_type": "command_executed",
+  "user": {
+    "id": "123456789012345678",
+    "username": "AdminUser#1234"
+  },
+  "command": "/rank",
+  "parameters": {
+    "target": "JohnDoe",
+    "rank": "Moderator",
+    "reason": "Promotion"
+  },
+  "result": "success",
+  "execution_time": "1.2s"
+}
+```
+
+### Performance Metrics
+
+- **Command Response Time**: Average time for command execution
+- **API Success Rate**: Percentage of successful Roblox API calls
+- **Sync Accuracy**: Percentage of successful role synchronizations
+- **Error Rates**: Frequency and types of errors encountered
+
+---
+
+<Note>
+  Discord integration is continuously updated to leverage new Discord features and improvements. 
+  Check our changelog for the latest enhancements.
+</Note>

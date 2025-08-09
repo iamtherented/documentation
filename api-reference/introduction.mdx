@@ -1,33 +1,401 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: 'API Introduction'
+description: 'Getting started with the Synera API'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Welcome to Synera API
 
-## Welcome
+The Synera API provides programmatic access to all of Synera's Discord-Roblox integration features. Whether you're building custom dashboards, integrating with existing systems, or creating automated workflows, our API gives you the power to manage your community programmatically.
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+<CardGroup cols={2}>
+  <Card title="RESTful Design" icon="globe">
+    Clean, predictable REST API with standard HTTP methods and status codes
+  </Card>
+  <Card title="Real-time Updates" icon="bolt">
+    WebSocket connections for real-time events and notifications
+  </Card>
+  <Card title="Comprehensive Coverage" icon="puzzle-piece">
+    Access to all Synera features including ranking, member management, and analytics
+  </Card>
+  <Card title="Developer Friendly" icon="code">
+    Detailed documentation, SDKs, and interactive API explorer
+  </Card>
+</CardGroup>
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+## Base URL
+
+All API requests should be made to:
+
+```
+https://api.synera.cc/v1
+```
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+The Synera API uses API keys for authentication. Include your API key in the `Authorization` header:
+
+```bash
+curl -H "Authorization: Bearer your_api_key_here" \
+     https://api.synera.cc/v1/groups/123456
+```
+
+<Warning>
+  Keep your API keys secure and never expose them in client-side code. Store them as environment variables or in secure configuration files.
+</Warning>
+
+## Rate Limiting
+
+To ensure fair usage and system stability, the Synera API implements rate limiting:
+
+<AccordionGroup>
+  <Accordion title="Rate Limits" icon="gauge">
+    - **Standard Tier**: 100 requests per minute
+    - **Premium Tier**: 500 requests per minute
+    - **Enterprise Tier**: 2000 requests per minute
+    
+    Rate limit headers are included in all responses:
+    ```
+    X-RateLimit-Limit: 100
+    X-RateLimit-Remaining: 95
+    X-RateLimit-Reset: 1640995200
+    ```
+  </Accordion>
+  
+  <Accordion title="Rate Limit Handling" icon="clock">
+    When you exceed the rate limit, you'll receive a `429 Too Many Requests` response:
+    
+    ```json
+    {
+      "error": "rate_limit_exceeded",
+      "message": "Rate limit exceeded. Try again in 60 seconds.",
+      "retry_after": 60
+    }
+    ```
+    
+    Implement exponential backoff in your applications to handle rate limits gracefully.
+  </Accordion>
+</AccordionGroup>
+
+## Response Format
+
+All API responses use JSON format with consistent structure:
+
+### Success Response
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
+{
+  "success": true,
+  "data": {
+    "id": "123456789",
+    "username": "JohnDoe",
+    "rank": {
+      "id": 100,
+      "name": "Moderator"
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "request_id": "req_abc123"
   }
-]
+}
 ```
+
+### Error Response
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "member_not_found",
+    "message": "The specified member was not found in the group",
+    "details": {
+      "user_id": "123456789",
+      "group_id": "987654321"
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "request_id": "req_def456"
+  }
+}
+```
+
+## HTTP Status Codes
+
+The API uses standard HTTP status codes:
+
+<Tabs>
+  <Tab title="Success Codes">
+    - `200 OK` - Request successful
+    - `201 Created` - Resource created successfully
+    - `202 Accepted` - Request accepted for processing
+    - `204 No Content` - Request successful, no content to return
+  </Tab>
+  
+  <Tab title="Client Error Codes">
+    - `400 Bad Request` - Invalid request parameters
+    - `401 Unauthorized` - Invalid or missing API key
+    - `403 Forbidden` - Insufficient permissions
+    - `404 Not Found` - Resource not found
+    - `409 Conflict` - Resource conflict
+    - `422 Unprocessable Entity` - Validation errors
+    - `429 Too Many Requests` - Rate limit exceeded
+  </Tab>
+  
+  <Tab title="Server Error Codes">
+    - `500 Internal Server Error` - Server error
+    - `502 Bad Gateway` - Upstream service error
+    - `503 Service Unavailable` - Service temporarily unavailable
+    - `504 Gateway Timeout` - Request timeout
+  </Tab>
+</Tabs>
+
+## Pagination
+
+For endpoints that return multiple items, pagination is used:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "123456789",
+      "username": "User1"
+    },
+    {
+      "id": "987654321", 
+      "username": "User2"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 50,
+    "total": 150,
+    "total_pages": 3,
+    "has_next": true,
+    "has_prev": false
+  }
+}
+```
+
+### Pagination Parameters
+
+- `page` - Page number (default: 1)
+- `per_page` - Items per page (default: 50, max: 100)
+- `sort` - Sort field (varies by endpoint)
+- `order` - Sort order (`asc` or `desc`)
+
+## Filtering and Searching
+
+Many endpoints support filtering and searching:
+
+```bash
+# Filter by rank
+GET /v1/groups/123456/members?rank=100
+
+# Search by username
+GET /v1/groups/123456/members?search=john
+
+# Multiple filters
+GET /v1/groups/123456/members?rank=100&active=true&sort=join_date&order=desc
+```
+
+## Webhooks
+
+Synera can send real-time notifications to your applications via webhooks:
+
+### Webhook Events
+
+<CardGroup cols={2}>
+  <Card title="Member Events" icon="user">
+    - `member.joined` - New member joined group
+    - `member.left` - Member left group
+    - `member.ranked` - Member rank changed
+    - `member.verified` - Member verified Discord account
+  </Card>
+  <Card title="Group Events" icon="users">
+    - `group.updated` - Group information changed
+    - `group.rank_created` - New rank created
+    - `group.rank_deleted` - Rank deleted
+    - `group.settings_changed` - Group settings modified
+  </Card>
+</CardGroup>
+
+### Webhook Configuration
+
+```bash
+# Create webhook
+POST /v1/webhooks
+{
+  "url": "https://your-app.com/webhooks/synera",
+  "events": ["member.ranked", "member.joined"],
+  "secret": "your_webhook_secret"
+}
+```
+
+### Webhook Payload
+
+```json
+{
+  "event": "member.ranked",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "data": {
+    "member": {
+      "id": "123456789",
+      "username": "JohnDoe",
+      "discord_id": "987654321098765432"
+    },
+    "rank_change": {
+      "from": {
+        "id": 50,
+        "name": "Member"
+      },
+      "to": {
+        "id": 100,
+        "name": "Moderator"
+      }
+    },
+    "executor": {
+      "id": "111222333",
+      "username": "AdminUser"
+    },
+    "reason": "Promotion for excellent performance"
+  },
+  "group_id": "123456789"
+}
+```
+
+## SDKs and Libraries
+
+Official SDKs are available for popular programming languages:
+
+<Tabs>
+  <Tab title="JavaScript/Node.js">
+    ```bash
+    npm install @synera/api-client
+    ```
+    
+    ```javascript
+    const { SyneraAPI } = require('@synera/api-client');
+    
+    const client = new SyneraAPI({
+      apiKey: 'your_api_key_here'
+    });
+    
+    // Get group information
+    const group = await client.groups.get('123456');
+    console.log(group.name);
+    ```
+  </Tab>
+  
+  <Tab title="Python">
+    ```bash
+    pip install synera-api
+    ```
+    
+    ```python
+    from synera import SyneraAPI
+    
+    client = SyneraAPI(api_key='your_api_key_here')
+    
+    # Get group members
+    members = client.groups.get_members('123456')
+    for member in members:
+        print(f"{member.username}: {member.rank.name}")
+    ```
+  </Tab>
+  
+  <Tab title="PHP">
+    ```bash
+    composer require synera/api-client
+    ```
+    
+    ```php
+    <?php
+    use Synera\ApiClient;
+    
+    $client = new ApiClient('your_api_key_here');
+    
+    // Rank a member
+    $result = $client->members->rank([
+        'group_id' => '123456',
+        'user_id' => '789012',
+        'rank_id' => 100,
+        'reason' => 'Promotion'
+    ]);
+    ```
+  </Tab>
+  
+  <Tab title="Go">
+    ```bash
+    go get github.com/synera-cc/go-api-client
+    ```
+    
+    ```go
+    package main
+    
+    import (
+        "github.com/synera-cc/go-api-client"
+    )
+    
+    func main() {
+        client := synera.NewClient("your_api_key_here")
+        
+        // Get member info
+        member, err := client.Members.Get("123456", "789012")
+        if err != nil {
+            log.Fatal(err)
+        }
+        
+        fmt.Printf("%s is rank %s\n", member.Username, member.Rank.Name)
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Interactive API Explorer
+
+Try out the API directly in your browser with our interactive explorer:
+
+<Card title="API Explorer" icon="play" href="https://api.synera.cc/explorer">
+  Test endpoints, view responses, and generate code examples
+</Card>
+
+## Getting Started
+
+<Steps>
+  <Step title="Get API Key">
+    Visit the [Synera Dashboard](https://dashboard.synera.cc) and generate an API key
+  </Step>
+  <Step title="Make Your First Request">
+    Test the API with a simple request to get your group information
+  </Step>
+  <Step title="Explore Endpoints">
+    Browse the available endpoints and their documentation
+  </Step>
+  <Step title="Build Your Integration">
+    Start building your custom integration using our SDKs or direct HTTP requests
+  </Step>
+</Steps>
+
+## Support
+
+Need help with the API? We're here to assist:
+
+<CardGroup cols={3}>
+  <Card title="Documentation" icon="book">
+    Comprehensive guides and examples for all endpoints
+  </Card>
+  <Card title="Discord Community" icon="discord" href="https://discord.gg/synera">
+    Join our Discord for real-time support and discussions
+  </Card>
+  <Card title="Email Support" icon="envelope" href="mailto:api@synera.cc">
+    Direct email support for technical questions
+  </Card>
+</CardGroup>
+
+---
+
+<Note>
+  The Synera API is continuously evolving. Check our changelog for the latest updates and new features.
+</Note>

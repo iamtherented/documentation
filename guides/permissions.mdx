@@ -1,0 +1,584 @@
+---
+title: 'Advanced Permissions'
+description: 'Configure complex permission systems and access controls'
+icon: 'shield-check'
+---
+
+## Permission System Overview
+
+Synera implements a multi-layered permission system that provides fine-grained control over who can perform various actions. The system combines Discord role-based permissions with Roblox group hierarchy and custom restrictions.
+
+## Permission Layers
+
+<div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+  <div className="text-center p-6 border border-gray-200 dark:border-gray-700 rounded-lg">
+    <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+      <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+    </div>
+    <h3 className="text-lg font-semibold mb-2">Discord Permissions</h3>
+    <p className="text-sm text-gray-600 dark:text-gray-400">Role-based access control within Discord server</p>
+  </div>
+  
+  <div className="text-center p-6 border border-gray-200 dark:border-gray-700 rounded-lg">
+    <div className="w-16 h-16 mx-auto mb-4 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+      <svg className="w-8 h-8 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a2 2 0 114 0 2 2 0 01-4 0zm8-1a1 1 0 100 2 1 1 0 000-2z"/>
+      </svg>
+    </div>
+    <h3 className="text-lg font-semibold mb-2">Roblox Hierarchy</h3>
+    <p className="text-sm text-gray-600 dark:text-gray-400">Group rank-based restrictions and validations</p>
+  </div>
+  
+  <div className="text-center p-6 border border-gray-200 dark:border-gray-700 rounded-lg">
+    <div className="w-16 h-16 mx-auto mb-4 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+      <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M12 15v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2a1 1 0 011-1h7a1 1 0 011 1zM4 13a2 2 0 100-4 2 2 0 000 4zm7-5a2 2 0 100-4 2 2 0 000 4z"/>
+      </svg>
+    </div>
+    <h3 className="text-lg font-semibold mb-2">Custom Rules</h3>
+    <p className="text-sm text-gray-600 dark:text-gray-400">Community-specific restrictions and requirements</p>
+  </div>
+</div>
+
+## Basic Permission Configuration
+
+### Setting Up Role Permissions
+
+Configure which Discord roles can use specific commands:
+
+```bash
+# Grant all ranking permissions to Admins
+/permissions set role:@Admin commands:all
+
+# Allow Moderators to promote/demote only
+/permissions set role:@Moderator commands:promote,demote,memberinfo
+
+# Allow Helpers to view information only
+/permissions set role:@Helper commands:memberinfo,groupinfo,rankhistory
+```
+
+### Command-Specific Permissions
+
+Set permissions for individual commands:
+
+<Tabs>
+  <Tab title="Ranking Commands">
+    ```bash
+    # Rank command - Admin and Co-Owner only
+    /permissions set command:rank roles:@Admin,@Co-Owner
+
+    # Promote command - Multiple roles with restrictions
+    /permissions set command:promote roles:@Admin,@Moderator max_rank:Member
+
+    # Demote command - Require confirmation for sensitive ranks
+    /permissions set command:demote roles:@Admin require_confirmation:true
+    ```
+  </Tab>
+  
+  <Tab title="Information Commands">
+    ```bash
+    # Member info - Available to all staff
+    /permissions set command:memberinfo roles:@Staff
+
+    # Group info - Available to all members
+    /permissions set command:groupinfo roles:@Member
+
+    # Rank history - Restricted to moderators and above
+    /permissions set command:rankhistory roles:@Moderator,@Admin
+    ```
+  </Tab>
+  
+  <Tab title="Management Commands">
+    ```bash
+    # Setup commands - Owner only
+    /permissions set command:setup_community roles:@Owner
+
+    # Config commands - Admin and above
+    /permissions set command:config roles:@Admin,@Co-Owner
+
+    # Sync commands - Moderator and above
+    /permissions set command:sync roles:@Moderator,@Admin,@Co-Owner
+    ```
+  </Tab>
+</Tabs>
+
+## Advanced Permission Rules
+
+### Hierarchy-Based Restrictions
+
+Implement rank-based limitations:
+
+<CodeGroup>
+```json Basic Hierarchy Rules
+{
+  "hierarchy_rules": {
+    "Admin": {
+      "can_rank_up_to": "Moderator",
+      "cannot_rank": ["Admin", "Co-Owner", "Owner"],
+      "can_demote_from": "Member",
+      "restrictions": ["cannot_rank_self"]
+    },
+    "Moderator": {
+      "can_rank_up_to": "Member", 
+      "cannot_rank": ["Moderator", "Admin", "Co-Owner", "Owner"],
+      "can_demote_from": "Guest",
+      "restrictions": ["cannot_rank_self", "require_reason"]
+    }
+  }
+}
+```
+
+```json Advanced Hierarchy Rules
+{
+  "hierarchy_rules": {
+    "Co-Owner": {
+      "can_rank_up_to": "Admin",
+      "cannot_rank": ["Co-Owner", "Owner"],
+      "special_permissions": ["bypass_cooldowns", "mass_operations"],
+      "restrictions": ["log_all_actions"]
+    },
+    "Admin": {
+      "can_rank_up_to": "Moderator",
+      "cannot_rank": ["Admin", "Co-Owner", "Owner"],
+      "conditions": {
+        "target_active_days": 7,
+        "require_approval_for": ["Senior Member", "Moderator"]
+      },
+      "restrictions": ["cannot_rank_self", "require_reason", "cooldown_60s"]
+    }
+  }
+}
+```
+</CodeGroup>
+
+### Conditional Permissions
+
+Set up permissions that depend on specific conditions:
+
+```yaml
+conditional_permissions:
+  - name: "New Member Restriction"
+    condition: "user.days_in_server < 7"
+    effect: "deny"
+    commands: ["promote", "demote", "rank"]
+    message: "You must be in the server for at least 7 days to use ranking commands"
+    
+  - name: "Activity Requirement"
+    condition: "user.messages_last_week < 10"
+    effect: "require_approval"
+    commands: ["promote"]
+    approval_roles: ["Admin"]
+    message: "Low activity detected. Admin approval required for promotions."
+    
+  - name: "High Rank Protection"
+    condition: "target.rank >= 150"
+    effect: "require_confirmation"
+    commands: ["demote", "rank"]
+    confirmation_timeout: "30s"
+    message: "You are about to modify a high-ranking member. Are you sure?"
+```
+
+### Time-Based Restrictions
+
+Implement time-based permission controls:
+
+<AccordionGroup>
+  <Accordion title="Cooldown Systems" icon="clock">
+    ```yaml
+    cooldowns:
+      global:
+        promote: "30s"
+        demote: "60s"
+        rank: "45s"
+        
+      per_role:
+        Admin:
+          promote: "15s"
+          demote: "30s"
+        Moderator:
+          promote: "60s"
+          demote: "120s"
+          
+      per_command:
+        massrank:
+          global: "300s"
+          per_user: "60s"
+    ```
+  </Accordion>
+  
+  <Accordion title="Time Windows" icon="calendar">
+    ```yaml
+    time_restrictions:
+      - name: "Business Hours Only"
+        commands: ["massrank", "config"]
+        allowed_times:
+          - start: "09:00"
+            end: "17:00"
+            timezone: "UTC"
+            days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+        message: "Mass operations are only allowed during business hours"
+        
+      - name: "Weekend Restrictions"
+        commands: ["demote"]
+        blocked_times:
+          - days: ["saturday", "sunday"]
+        exceptions:
+          roles: ["Owner", "Co-Owner"]
+        message: "Demotions are not allowed on weekends"
+    ```
+  </Accordion>
+  
+  <Accordion title="Rate Limiting" icon="gauge">
+    ```yaml
+    rate_limits:
+      per_user:
+        promote: 
+          count: 5
+          period: "1h"
+        demote:
+          count: 3
+          period: "1h"
+          
+      per_role:
+        Moderator:
+          any_ranking_command:
+            count: 10
+            period: "1h"
+            
+      global:
+        massrank:
+          count: 1
+          period: "10m"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Permission Profiles
+
+### Creating Permission Profiles
+
+Define reusable permission sets:
+
+<CodeGroup>
+```yaml Staff Profile
+name: "Staff"
+description: "Standard staff member permissions"
+permissions:
+  commands:
+    - "memberinfo"
+    - "groupinfo" 
+    - "rankhistory"
+    - "promote"
+    - "demote"
+  restrictions:
+    - "cannot_rank_self"
+    - "require_reason"
+    - "max_rank_member"
+  cooldowns:
+    promote: "60s"
+    demote: "120s"
+  conditions:
+    - "user.days_in_server >= 7"
+    - "user.verified_roblox == true"
+```
+
+```yaml Senior Staff Profile
+name: "Senior Staff"
+description: "Senior staff with elevated permissions"
+inherits: "Staff"
+additional_permissions:
+  commands:
+    - "rank"
+    - "massrank"
+    - "sync"
+  restrictions:
+    - "max_rank_moderator"
+  special_abilities:
+    - "bypass_activity_checks"
+    - "emergency_ranking"
+  cooldowns:
+    promote: "30s"
+    demote: "60s"
+    massrank: "300s"
+```
+</CodeGroup>
+
+### Applying Permission Profiles
+
+```bash
+# Apply profile to a role
+/permissions profile apply name:Staff role:@Moderator
+
+# Apply profile to multiple roles
+/permissions profile apply name:"Senior Staff" roles:@Admin,@Co-Owner
+
+# Create custom profile for specific role
+/permissions profile create name:"Trial Mod" based_on:Staff restrictions:max_rank_guest
+```
+
+## Channel-Based Permissions
+
+### Command Channel Restrictions
+
+Limit where commands can be used:
+
+```bash
+# Restrict ranking commands to specific channels
+/permissions channel set commands:promote,demote,rank channels:#ranking-commands
+
+# Allow information commands in multiple channels
+/permissions channel set commands:memberinfo,groupinfo channels:#bot-commands,#general
+
+# Set staff-only channels for sensitive commands
+/permissions channel set commands:config,setup channels:#staff-only
+```
+
+### Channel Permission Overrides
+
+<CodeGroup>
+```json Basic Channel Config
+{
+  "channel_permissions": {
+    "#ranking-commands": {
+      "allowed_commands": ["promote", "demote", "rank", "massrank"],
+      "required_roles": ["Moderator", "Admin"],
+      "restrictions": ["require_reason"]
+    },
+    "#public-commands": {
+      "allowed_commands": ["memberinfo", "groupinfo"],
+      "required_roles": ["Member"],
+      "restrictions": ["cooldown_30s"]
+    }
+  }
+}
+```
+
+```json Advanced Channel Config
+{
+  "channel_permissions": {
+    "#emergency-ranking": {
+      "allowed_commands": ["*"],
+      "required_roles": ["Admin", "Co-Owner"],
+      "special_modes": ["bypass_cooldowns", "skip_confirmations"],
+      "audit_level": "detailed",
+      "restrictions": ["log_all_actions", "require_reason"]
+    },
+    "#trial-commands": {
+      "allowed_commands": ["promote"],
+      "required_roles": ["Trial Moderator"],
+      "restrictions": [
+        "max_rank_member",
+        "require_approval",
+        "cooldown_300s"
+      ],
+      "approval_channel": "#staff-approvals"
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Permission Auditing
+
+### Audit Logging
+
+Track all permission-related activities:
+
+```bash
+# Enable detailed permission logging
+/permissions audit enable level:detailed channel:#audit-logs
+
+# Log specific permission events
+/permissions audit events permission_denied,role_override,emergency_access
+
+# Set up audit alerts for suspicious activity
+/permissions audit alerts enable threshold:5 period:1h notify:@Admin
+```
+
+### Permission Reports
+
+Generate comprehensive permission reports:
+
+<Tabs>
+  <Tab title="User Permissions">
+    ```bash
+    # Check specific user's permissions
+    /permissions check user:@JohnDoe
+
+    # Generate user permission report
+    /permissions report user:@JohnDoe format:detailed
+
+    # Compare permissions between users
+    /permissions compare users:@User1,@User2
+    ```
+  </Tab>
+  
+  <Tab title="Role Analysis">
+    ```bash
+    # Analyze role permissions
+    /permissions analyze role:@Moderator
+
+    # Generate role permission matrix
+    /permissions matrix roles:@Admin,@Moderator,@Helper
+
+    # Find permission conflicts
+    /permissions conflicts check scope:all
+    ```
+  </Tab>
+  
+  <Tab title="System Overview">
+    ```bash
+    # Generate system-wide permission report
+    /permissions report system format:comprehensive
+
+    # Check for unused permissions
+    /permissions cleanup unused period:30d
+
+    # Validate permission configuration
+    /permissions validate config
+    ```
+  </Tab>
+</Tabs>
+
+## Emergency Access
+
+### Emergency Override System
+
+Configure emergency access for critical situations:
+
+```yaml
+emergency_access:
+  triggers:
+    - name: "Server Compromise"
+      activation_method: "command"
+      command: "/emergency activate server_compromise"
+      required_confirmations: 2
+      confirmation_roles: ["Owner", "Co-Owner"]
+      
+  permissions:
+    - name: "Emergency Admin"
+      duration: "1h"
+      auto_revoke: true
+      permissions: ["*"]
+      restrictions: ["log_all_actions", "require_reason"]
+      
+  notifications:
+    - channel: "#emergency-log"
+      mention_roles: ["@Owner", "@Co-Owner"]
+    - webhook: "https://your-emergency-webhook.com"
+```
+
+### Temporary Permission Grants
+
+Grant temporary elevated permissions:
+
+```bash
+# Grant temporary permissions
+/permissions temp grant user:@Helper commands:promote duration:2h reason:"Covering for absent moderator"
+
+# Grant emergency access
+/permissions emergency grant user:@TrustedMember level:moderator duration:30m
+
+# Revoke temporary permissions early
+/permissions temp revoke user:@Helper
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Security Principles" icon="shield">
+    - **Principle of Least Privilege**: Grant minimum necessary permissions
+    - **Regular Audits**: Review permissions monthly
+    - **Clear Documentation**: Document all permission changes
+    - **Emergency Procedures**: Have clear escalation paths
+  </Card>
+  <Card title="Operational Guidelines" icon="cog">
+    - **Test Changes**: Test permission changes in development
+    - **Gradual Rollout**: Implement changes incrementally
+    - **Monitor Impact**: Watch for issues after changes
+    - **User Training**: Educate staff on permission system
+  </Card>
+  <Card title="Compliance & Governance" icon="balance-scale">
+    - **Change Approval**: Require approval for major changes
+    - **Audit Trails**: Maintain complete audit logs
+    - **Regular Reviews**: Schedule permission reviews
+    - **Incident Response**: Have procedures for permission issues
+  </Card>
+  <Card title="User Experience" icon="heart">
+    - **Clear Error Messages**: Explain permission denials clearly
+    - **Self-Service**: Allow users to check their permissions
+    - **Consistent Behavior**: Ensure predictable permission behavior
+    - **Help Documentation**: Provide clear permission guides
+  </Card>
+</CardGroup>
+
+## Troubleshooting Permissions
+
+<AccordionGroup>
+  <Accordion title="Permission Denied Errors" icon="ban">
+    **Common Causes:**
+    - User lacks required Discord role
+    - Command restricted to specific channels
+    - Cooldown period still active
+    - Conditional requirements not met
+    
+    **Diagnostic Steps:**
+    1. Check user's Discord roles
+    2. Verify command channel restrictions
+    3. Check for active cooldowns
+    4. Review conditional permission rules
+    5. Examine audit logs for details
+  </Accordion>
+  
+  <Accordion title="Unexpected Permission Grants" icon="exclamation-triangle">
+    **Common Causes:**
+    - Role hierarchy conflicts
+    - Permission inheritance issues
+    - Emergency access still active
+    - Configuration errors
+    
+    **Diagnostic Steps:**
+    1. Review role permission matrix
+    2. Check for active temporary grants
+    3. Validate permission configuration
+    4. Examine recent permission changes
+    5. Test with minimal permissions
+  </Accordion>
+  
+  <Accordion title="Performance Issues" icon="clock">
+    **Common Causes:**
+    - Complex conditional rules
+    - Excessive audit logging
+    - Large permission matrices
+    - Database performance issues
+    
+    **Solutions:**
+    1. Simplify complex permission rules
+    2. Optimize audit log settings
+    3. Cache frequently checked permissions
+    4. Review database performance
+    5. Consider permission profile consolidation
+  </Accordion>
+</AccordionGroup>
+
+---
+
+<Note>
+  Permission systems require careful planning and regular maintenance. Start with simple configurations and gradually add complexity as your community grows and your needs become clearer.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Custom Commands" icon="terminal" href="/guides/custom-commands">
+    Learn how to create commands with custom permission requirements
+  </Card>
+  <Card title="API Integration" icon="code" href="/api-reference">
+    Implement permission checks in external applications
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/guides/troubleshooting">
+    Common permission issues and their solutions
+  </Card>
+</CardGroup>

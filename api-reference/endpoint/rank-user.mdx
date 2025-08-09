@@ -1,0 +1,704 @@
+---
+title: 'Rank User'
+openapi: 'POST /groups/{group_id}/members/{user_id}/rank'
+---
+
+Change a member's rank in a Roblox group. This endpoint allows you to promote, demote, or set a specific rank for a group member.
+
+## Path Parameters
+
+<ParamField path="group_id" type="string" required>
+  The ID of the Roblox group
+</ParamField>
+
+<ParamField path="user_id" type="string" required>
+  The Roblox user ID or Discord user ID of the member to rank
+</ParamField>
+
+## Body Parameters
+
+<ParamField body="rank_id" type="number" required>
+  The target rank ID (1-255) to set for the member
+</ParamField>
+
+<ParamField body="reason" type="string">
+  Reason for the rank change (recommended for audit purposes)
+</ParamField>
+
+<ParamField body="notify_member" type="boolean" default="true">
+  Whether to send a notification to the member about the rank change
+</ParamField>
+
+<ParamField body="force" type="boolean" default="false">
+  Bypass certain safety checks (requires elevated permissions)
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the ranking operation was successful
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="Ranking Result">
+    <ResponseField name="member" type="object">
+      <Expandable title="Member Information">
+        <ResponseField name="id" type="string">
+          Roblox user ID
+        </ResponseField>
+        <ResponseField name="username" type="string">
+          Current Roblox username
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="rank_change" type="object">
+      <Expandable title="Rank Change Details">
+        <ResponseField name="from" type="object">
+          <Expandable title="Previous Rank">
+            <ResponseField name="id" type="number">
+              Previous rank ID
+            </ResponseField>
+            <ResponseField name="name" type="string">
+              Previous rank name
+            </ResponseField>
+          </Expandable>
+        </ResponseField>
+        
+        <ResponseField name="to" type="object">
+          <Expandable title="New Rank">
+            <ResponseField name="id" type="number">
+              New rank ID
+            </ResponseField>
+            <ResponseField name="name" type="string">
+              New rank name
+            </ResponseField>
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="executor" type="object">
+      <Expandable title="Executor Information">
+        <ResponseField name="api_key_name" type="string">
+          Name of the API key used
+        </ResponseField>
+        <ResponseField name="permissions" type="array">
+          Permissions used for this operation
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="reason" type="string">
+      Reason provided for the rank change
+    </ResponseField>
+    
+    <ResponseField name="timestamp" type="string">
+      ISO 8601 timestamp when the rank change occurred
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  <Expandable title="Metadata">
+    <ResponseField name="timestamp" type="string">
+      ISO 8601 timestamp of the response
+    </ResponseField>
+    <ResponseField name="request_id" type="string">
+      Unique identifier for this request
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl -X POST "https://api.synera.cc/v1/groups/123456/members/789012/rank" \
+  -H "Authorization: Bearer sk_live_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rank_id": 100,
+    "reason": "Promotion for excellent performance",
+    "notify_member": true
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.synera.cc/v1/groups/123456/members/789012/rank', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer sk_live_abc123...',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    rank_id: 100,
+    reason: 'Promotion for excellent performance',
+    notify_member: true
+  })
+});
+
+const data = await response.json();
+console.log(data);
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Bearer sk_live_abc123...',
+    'Content-Type': 'application/json'
+}
+
+payload = {
+    'rank_id': 100,
+    'reason': 'Promotion for excellent performance',
+    'notify_member': True
+}
+
+response = requests.post(
+    'https://api.synera.cc/v1/groups/123456/members/789012/rank',
+    headers=headers,
+    json=payload
+)
+
+data = response.json()
+print(data)
+```
+
+```php PHP
+<?php
+$curl = curl_init();
+
+$payload = json_encode([
+    'rank_id' => 100,
+    'reason' => 'Promotion for excellent performance',
+    'notify_member' => true
+]);
+
+curl_setopt_array($curl, [
+    CURLOPT_URL => 'https://api.synera.cc/v1/groups/123456/members/789012/rank',
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => $payload,
+    CURLOPT_HTTPHEADER => [
+        'Authorization: Bearer sk_live_abc123...',
+        'Content-Type: application/json'
+    ]
+]);
+
+$response = curl_exec($curl);
+$data = json_decode($response, true);
+
+curl_close($curl);
+print_r($data);
+?>
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response
+{
+  "success": true,
+  "data": {
+    "member": {
+      "id": "789012",
+      "username": "JohnDoe_Official"
+    },
+    "rank_change": {
+      "from": {
+        "id": 50,
+        "name": "Member"
+      },
+      "to": {
+        "id": 100,
+        "name": "Moderator"
+      }
+    },
+    "executor": {
+      "api_key_name": "Production API Key",
+      "permissions": ["members:rank"]
+    },
+    "reason": "Promotion for excellent performance",
+    "timestamp": "2024-01-20T16:00:00Z"
+  },
+  "meta": {
+    "timestamp": "2024-01-20T16:00:00Z",
+    "request_id": "req_abc123def456"
+  }
+}
+```
+
+```json Error Response - Hierarchy Violation
+{
+  "success": false,
+  "error": {
+    "code": "hierarchy_violation",
+    "message": "Cannot rank member higher than your own rank",
+    "details": {
+      "requested_rank": 200,
+      "max_allowed_rank": 150,
+      "your_rank": 150
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-20T16:00:00Z",
+    "request_id": "req_def456ghi789"
+  }
+}
+```
+
+```json Error Response - Member Already at Rank
+{
+  "success": false,
+  "error": {
+    "code": "rank_conflict",
+    "message": "Member is already at the specified rank",
+    "details": {
+      "current_rank": {
+        "id": 100,
+        "name": "Moderator"
+      },
+      "requested_rank": {
+        "id": 100,
+        "name": "Moderator"
+      }
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-20T16:00:00Z",
+    "request_id": "req_ghi789jkl012"
+  }
+}
+```
+
+</ResponseExample>
+
+## Usage Examples
+
+### Basic Ranking Operation
+
+Promote a member to a specific rank:
+
+<CodeGroup>
+
+```javascript JavaScript
+async function rankMember(groupId, userId, rankId, reason) {
+  try {
+    const response = await fetch(`https://api.synera.cc/v1/groups/${groupId}/members/${userId}/rank`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.SYNERA_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        rank_id: rankId,
+        reason: reason,
+        notify_member: true
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Ranking failed: ${errorData.error.message}`);
+    }
+    
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Failed to rank member:', error);
+    throw error;
+  }
+}
+
+// Usage
+const result = await rankMember('123456', '789012', 100, 'Monthly promotion');
+console.log(`${result.member.username} promoted from ${result.rank_change.from.name} to ${result.rank_change.to.name}`);
+```
+
+```python Python
+import requests
+import os
+
+def rank_member(group_id: str, user_id: str, rank_id: int, reason: str = None) -> dict:
+    """Rank a member to a specific position."""
+    headers = {
+        'Authorization': f'Bearer {os.getenv("SYNERA_API_KEY")}',
+        'Content-Type': 'application/json'
+    }
+    
+    payload = {
+        'rank_id': rank_id,
+        'notify_member': True
+    }
+    
+    if reason:
+        payload['reason'] = reason
+    
+    response = requests.post(
+        f'https://api.synera.cc/v1/groups/{group_id}/members/{user_id}/rank',
+        headers=headers,
+        json=payload
+    )
+    
+    if response.status_code == 200:
+        return response.json()['data']
+    else:
+        response.raise_for_status()
+
+# Usage
+result = rank_member('123456', '789012', 100, 'Monthly promotion')
+print(f"{result['member']['username']} promoted to {result['rank_change']['to']['name']}")
+```
+
+</CodeGroup>
+
+### Batch Ranking Operations
+
+Rank multiple members efficiently:
+
+<CodeGroup>
+
+```javascript JavaScript
+async function batchRankMembers(groupId, rankings) {
+  const results = [];
+  const errors = [];
+  
+  // Process rankings with delay to respect rate limits
+  for (const ranking of rankings) {
+    try {
+      const result = await rankMember(
+        groupId,
+        ranking.userId,
+        ranking.rankId,
+        ranking.reason
+      );
+      results.push(result);
+      
+      // Add delay between requests to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } catch (error) {
+      errors.push({
+        userId: ranking.userId,
+        error: error.message
+      });
+    }
+  }
+  
+  return { successful: results, failed: errors };
+}
+
+// Usage
+const rankings = [
+  { userId: '789012', rankId: 100, reason: 'Promotion' },
+  { userId: '345678', rankId: 75, reason: 'Performance review' },
+  { userId: '901234', rankId: 50, reason: 'New member orientation' }
+];
+
+const { successful, failed } = await batchRankMembers('123456', rankings);
+console.log(`Successfully ranked ${successful.length} members`);
+console.log(`Failed to rank ${failed.length} members`);
+```
+
+```python Python
+import time
+from typing import List, Dict, Any
+
+def batch_rank_members(group_id: str, rankings: List[Dict[str, Any]]) -> Dict[str, List]:
+    """Rank multiple members with rate limiting."""
+    successful = []
+    failed = []
+    
+    for ranking in rankings:
+        try:
+            result = rank_member(
+                group_id,
+                ranking['user_id'],
+                ranking['rank_id'],
+                ranking.get('reason')
+            )
+            successful.append(result)
+            
+            # Add delay to respect rate limits
+            time.sleep(1)
+            
+        except Exception as e:
+            failed.append({
+                'user_id': ranking['user_id'],
+                'error': str(e)
+            })
+    
+    return {
+        'successful': successful,
+        'failed': failed
+    }
+
+# Usage
+rankings = [
+    {'user_id': '789012', 'rank_id': 100, 'reason': 'Promotion'},
+    {'user_id': '345678', 'rank_id': 75, 'reason': 'Performance review'},
+    {'user_id': '901234', 'rank_id': 50, 'reason': 'New member orientation'}
+]
+
+results = batch_rank_members('123456', rankings)
+print(f"Successfully ranked {len(results['successful'])} members")
+print(f"Failed to rank {len(results['failed'])} members")
+```
+
+</CodeGroup>
+
+### Conditional Ranking
+
+Rank members based on conditions:
+
+```javascript
+async function conditionalRank(groupId, userId, conditions) {
+  // Get current member information
+  const member = await getMemberInfo(groupId, userId);
+  
+  // Check conditions
+  if (conditions.minDaysInGroup) {
+    const joinDate = new Date(member.join_date);
+    const daysSinceJoin = (Date.now() - joinDate.getTime()) / (1000 * 60 * 60 * 24);
+    
+    if (daysSinceJoin < conditions.minDaysInGroup) {
+      throw new Error(`Member must be in group for at least ${conditions.minDaysInGroup} days`);
+    }
+  }
+  
+  if (conditions.maxCurrentRank && member.rank.id > conditions.maxCurrentRank) {
+    throw new Error(`Member's current rank (${member.rank.id}) exceeds maximum allowed (${conditions.maxCurrentRank})`);
+  }
+  
+  // Proceed with ranking if all conditions are met
+  return await rankMember(groupId, userId, conditions.targetRank, conditions.reason);
+}
+
+// Usage
+try {
+  const result = await conditionalRank('123456', '789012', {
+    targetRank: 100,
+    minDaysInGroup: 30,
+    maxCurrentRank: 75,
+    reason: 'Conditional promotion after 30 days'
+  });
+  console.log('Conditional ranking successful:', result);
+} catch (error) {
+  console.log('Conditions not met:', error.message);
+}
+```
+
+## Ranking Helpers
+
+### Promote/Demote Functions
+
+Convenience functions for common operations:
+
+<CodeGroup>
+
+```javascript JavaScript
+async function promoteMember(groupId, userId, reason) {
+  // Get current rank first
+  const member = await getMemberInfo(groupId, userId);
+  const currentRank = member.rank.id;
+  
+  // Define promotion logic based on your group structure
+  const promotionMap = {
+    1: 25,   // Guest -> Trial Member
+    25: 50,  // Trial Member -> Member
+    50: 75,  // Member -> Senior Member
+    75: 100, // Senior Member -> Moderator
+    100: 150 // Moderator -> Administrator
+  };
+  
+  const newRank = promotionMap[currentRank];
+  if (!newRank) {
+    throw new Error(`No promotion available for rank ${currentRank}`);
+  }
+  
+  return await rankMember(groupId, userId, newRank, reason || 'Promotion');
+}
+
+async function demoteMember(groupId, userId, reason) {
+  const member = await getMemberInfo(groupId, userId);
+  const currentRank = member.rank.id;
+  
+  // Define demotion logic
+  const demotionMap = {
+    150: 100, // Administrator -> Moderator
+    100: 75,  // Moderator -> Senior Member
+    75: 50,   // Senior Member -> Member
+    50: 25,   // Member -> Trial Member
+    25: 1     // Trial Member -> Guest
+  };
+  
+  const newRank = demotionMap[currentRank];
+  if (!newRank) {
+    throw new Error(`No demotion available for rank ${currentRank}`);
+  }
+  
+  return await rankMember(groupId, userId, newRank, reason || 'Demotion');
+}
+```
+
+```python Python
+def promote_member(group_id: str, user_id: str, reason: str = None) -> dict:
+    """Promote a member to the next rank level."""
+    # Get current member info
+    member = get_member_info(group_id, user_id)
+    current_rank = member['rank']['id']
+    
+    # Define promotion mapping
+    promotion_map = {
+        1: 25,   # Guest -> Trial Member
+        25: 50,  # Trial Member -> Member
+        50: 75,  # Member -> Senior Member
+        75: 100, # Senior Member -> Moderator
+        100: 150 # Moderator -> Administrator
+    }
+    
+    new_rank = promotion_map.get(current_rank)
+    if not new_rank:
+        raise ValueError(f"No promotion available for rank {current_rank}")
+    
+    return rank_member(group_id, user_id, new_rank, reason or 'Promotion')
+
+def demote_member(group_id: str, user_id: str, reason: str = None) -> dict:
+    """Demote a member to the previous rank level."""
+    member = get_member_info(group_id, user_id)
+    current_rank = member['rank']['id']
+    
+    # Define demotion mapping
+    demotion_map = {
+        150: 100, # Administrator -> Moderator
+        100: 75,  # Moderator -> Senior Member
+        75: 50,   # Senior Member -> Member
+        50: 25,   # Member -> Trial Member
+        25: 1     # Trial Member -> Guest
+    }
+    
+    new_rank = demotion_map.get(current_rank)
+    if not new_rank:
+        raise ValueError(f"No demotion available for rank {current_rank}")
+    
+    return rank_member(group_id, user_id, new_rank, reason or 'Demotion')
+```
+
+</CodeGroup>
+
+## Error Handling
+
+<AccordionGroup>
+  <Accordion title="Hierarchy Violations" icon="triangle-exclamation">
+    **Error Code:** `hierarchy_violation`
+    
+    **Cause:** Attempting to rank a member to a position higher than your own rank.
+    
+    **Solution:**
+    ```javascript
+    try {
+      await rankMember(groupId, userId, rankId, reason);
+    } catch (error) {
+      if (error.code === 'hierarchy_violation') {
+        console.log(`Cannot rank to ${rankId}. Maximum allowed: ${error.details.max_allowed_rank}`);
+        // Suggest alternative rank or request approval
+        return await rankMember(groupId, userId, error.details.max_allowed_rank, reason);
+      }
+      throw error;
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Rank Conflicts" icon="exclamation">
+    **Error Code:** `rank_conflict`
+    
+    **Cause:** Member is already at the specified rank.
+    
+    **Solution:**
+    ```javascript
+    try {
+      await rankMember(groupId, userId, rankId, reason);
+    } catch (error) {
+      if (error.code === 'rank_conflict') {
+        console.log(`Member is already rank ${error.details.current_rank.name}`);
+        return { skipped: true, reason: 'Already at target rank' };
+      }
+      throw error;
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Rate Limiting" icon="gauge">
+    **Error Code:** `rate_limit_exceeded`
+    
+    **Cause:** Too many ranking operations in a short time.
+    
+    **Solution:**
+    ```javascript
+    async function rankWithRetry(groupId, userId, rankId, reason, maxRetries = 3) {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          return await rankMember(groupId, userId, rankId, reason);
+        } catch (error) {
+          if (error.code === 'rate_limit_exceeded' && attempt < maxRetries) {
+            const delay = error.details.retry_after * 1000;
+            console.log(`Rate limited, waiting ${delay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+          throw error;
+        }
+      }
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Audit Trail" icon="clipboard-list">
+    Always provide meaningful reasons for rank changes:
+    
+    ```javascript
+    // Good: Descriptive reason
+    await rankMember(groupId, userId, 100, 'Promoted for excellent moderation work and community engagement');
+    
+    // Bad: Generic or missing reason
+    await rankMember(groupId, userId, 100, 'promotion');
+    ```
+  </Card>
+  
+  <Card title="Validation" icon="check-circle">
+    Validate rank changes before execution:
+    
+    ```javascript
+    async function safeRankMember(groupId, userId, rankId, reason) {
+      // Validate rank exists
+      const groupInfo = await getGroupInfo(groupId);
+      const validRanks = groupInfo.ranks.map(r => r.id);
+      
+      if (!validRanks.includes(rankId)) {
+        throw new Error(`Invalid rank ID: ${rankId}`);
+      }
+      
+      // Get current member info
+      const member = await getMemberInfo(groupId, userId);
+      
+      // Check if change is necessary
+      if (member.rank.id === rankId) {
+        return { skipped: true, reason: 'Already at target rank' };
+      }
+      
+      return await rankMember(groupId, userId, rankId, reason);
+    }
+    ```
+  </Card>
+</CardGroup>
+
+---
+
+<Note>
+  Ranking operations are permanent and immediately visible in both Roblox and Discord. Always double-check the target rank and member before executing ranking commands.
+</Note>

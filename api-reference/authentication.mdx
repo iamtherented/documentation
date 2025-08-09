@@ -1,0 +1,421 @@
+---
+title: 'API Authentication'
+description: 'Learn how to authenticate with the Synera API'
+---
+
+## Overview
+
+The Synera API uses API keys for authentication. All requests must include a valid API key in the `Authorization` header using the Bearer token format.
+
+## Getting an API Key
+
+<Steps>
+  <Step title="Access Dashboard">
+    Visit the [Synera Dashboard](https://dashboard.synera.cc) and log in with your Discord account
+  </Step>
+  <Step title="Navigate to API Settings">
+    Go to your server settings and click on the "API" tab
+  </Step>
+  <Step title="Generate API Key">
+    Click "Generate New API Key" and provide a descriptive name for your key
+  </Step>
+  <Step title="Configure Permissions">
+    Set the appropriate permissions and restrictions for your API key
+  </Step>
+  <Step title="Copy and Store Securely">
+    Copy the generated API key and store it securely - you won't be able to see it again
+  </Step>
+</Steps>
+
+## Authentication Methods
+
+### Bearer Token (Recommended)
+
+Include your API key in the `Authorization` header:
+
+```bash
+curl -H "Authorization: Bearer sk_live_abc123..." \
+     https://api.synera.cc/v1/groups/123456
+```
+
+### Query Parameter (Not Recommended)
+
+<Warning>
+  Using API keys in query parameters is not recommended as they may be logged in server access logs or browser history.
+</Warning>
+
+```bash
+curl https://api.synera.cc/v1/groups/123456?api_key=sk_live_abc123...
+```
+
+## API Key Types
+
+<Tabs>
+  <Tab title="Live Keys">
+    **Format:** `sk_live_...`
+    
+    - Used for production environments
+    - Full access to your group data
+    - Rate limits apply based on your plan
+    - All operations are permanent
+    
+    ```bash
+    Authorization: Bearer sk_live_abc123def456ghi789
+    ```
+  </Tab>
+  
+  <Tab title="Test Keys">
+    **Format:** `sk_test_...`
+    
+    - Used for development and testing
+    - Limited to read-only operations
+    - No permanent changes to your group
+    - Reduced rate limits
+    
+    ```bash
+    Authorization: Bearer sk_test_xyz789uvw456rst123
+    ```
+  </Tab>
+  
+  <Tab title="Restricted Keys">
+    **Format:** `sk_restricted_...`
+    
+    - Limited to specific endpoints or operations
+    - Configurable permissions and restrictions
+    - Ideal for third-party integrations
+    - Custom rate limits
+    
+    ```bash
+    Authorization: Bearer sk_restricted_def456ghi789jkl012
+    ```
+  </Tab>
+</Tabs>
+
+## API Key Permissions
+
+When creating an API key, you can configure specific permissions:
+
+### Permission Scopes
+
+<AccordionGroup>
+  <Accordion title="Group Management" icon="users">
+    - `groups:read` - View group information and statistics
+    - `groups:write` - Modify group settings and configuration
+    - `groups:admin` - Full administrative access to group
+  </Accordion>
+  
+  <Accordion title="Member Management" icon="user">
+    - `members:read` - View member information and lists
+    - `members:write` - Modify member data and settings
+    - `members:rank` - Change member ranks and positions
+  </Accordion>
+  
+  <Accordion title="Analytics & Reporting" icon="chart-bar">
+    - `analytics:read` - Access analytics and reporting data
+    - `logs:read` - View audit logs and activity history
+    - `stats:read` - Access statistical information
+  </Accordion>
+  
+  <Accordion title="Webhooks & Events" icon="webhook">
+    - `webhooks:read` - View webhook configurations
+    - `webhooks:write` - Create and modify webhooks
+    - `events:read` - Access event history and data
+  </Accordion>
+</AccordionGroup>
+
+### Permission Configuration Example
+
+```json
+{
+  "name": "Analytics Dashboard",
+  "permissions": [
+    "groups:read",
+    "members:read", 
+    "analytics:read",
+    "stats:read"
+  ],
+  "restrictions": {
+    "ip_whitelist": ["192.168.1.100", "10.0.0.0/8"],
+    "rate_limit": 200,
+    "expires_at": "2024-12-31T23:59:59Z"
+  }
+}
+```
+
+## Security Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Secure Storage" icon="lock">
+    - Store API keys as environment variables
+    - Never commit keys to version control
+    - Use secure key management services
+    - Rotate keys regularly
+  </Card>
+  <Card title="Access Control" icon="shield-check">
+    - Use principle of least privilege
+    - Create separate keys for different applications
+    - Set appropriate expiration dates
+    - Monitor key usage regularly
+  </Card>
+  <Card title="Network Security" icon="globe">
+    - Use HTTPS for all API requests
+    - Implement IP whitelisting when possible
+    - Use secure network connections
+    - Monitor for unusual activity
+  </Card>
+  <Card title="Error Handling" icon="exclamation-triangle">
+    - Don't log API keys in error messages
+    - Handle authentication errors gracefully
+    - Implement proper retry logic
+    - Monitor authentication failures
+  </Card>
+</CardGroup>
+
+## Authentication Errors
+
+### Common Error Responses
+
+<Tabs>
+  <Tab title="401 Unauthorized">
+    **Missing or Invalid API Key**
+    
+    ```json
+    {
+      "success": false,
+      "error": {
+        "code": "unauthorized",
+        "message": "Invalid or missing API key",
+        "details": {
+          "provided_key": "sk_live_abc...",
+          "key_status": "invalid"
+        }
+      }
+    }
+    ```
+    
+    **Solutions:**
+    - Verify your API key is correct
+    - Check that the key hasn't expired
+    - Ensure proper Authorization header format
+  </Tab>
+  
+  <Tab title="403 Forbidden">
+    **Insufficient Permissions**
+    
+    ```json
+    {
+      "success": false,
+      "error": {
+        "code": "forbidden",
+        "message": "Insufficient permissions for this operation",
+        "details": {
+          "required_permission": "members:rank",
+          "available_permissions": ["members:read", "groups:read"]
+        }
+      }
+    }
+    ```
+    
+    **Solutions:**
+    - Check your API key permissions
+    - Request additional permissions if needed
+    - Use a different API key with appropriate permissions
+  </Tab>
+  
+  <Tab title="429 Rate Limited">
+    **Rate Limit Exceeded**
+    
+    ```json
+    {
+      "success": false,
+      "error": {
+        "code": "rate_limit_exceeded",
+        "message": "API rate limit exceeded",
+        "details": {
+          "limit": 100,
+          "remaining": 0,
+          "reset_at": "2024-01-15T10:35:00Z"
+        }
+      }
+    }
+    ```
+    
+    **Solutions:**
+    - Implement exponential backoff
+    - Reduce request frequency
+    - Consider upgrading your plan
+    - Cache responses when possible
+  </Tab>
+</Tabs>
+
+## Testing Authentication
+
+### Verify API Key
+
+Test your API key with a simple request:
+
+<CodeGroup>
+```bash cURL
+curl -H "Authorization: Bearer your_api_key_here" \
+     https://api.synera.cc/v1/auth/verify
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.synera.cc/v1/auth/verify', {
+  headers: {
+    'Authorization': 'Bearer your_api_key_here',
+    'Content-Type': 'application/json'
+  }
+});
+
+const data = await response.json();
+console.log(data);
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Bearer your_api_key_here',
+    'Content-Type': 'application/json'
+}
+
+response = requests.get('https://api.synera.cc/v1/auth/verify', headers=headers)
+print(response.json())
+```
+</CodeGroup>
+
+### Expected Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "key_id": "key_abc123",
+    "name": "My API Key",
+    "permissions": [
+      "groups:read",
+      "members:read",
+      "members:rank"
+    ],
+    "rate_limit": {
+      "limit": 100,
+      "remaining": 99,
+      "reset_at": "2024-01-15T10:35:00Z"
+    },
+    "restrictions": {
+      "ip_whitelist": ["192.168.1.100"],
+      "expires_at": "2024-12-31T23:59:59Z"
+    }
+  }
+}
+```
+
+## API Key Management
+
+### List API Keys
+
+View all your API keys:
+
+```bash
+GET /v1/auth/keys
+```
+
+### Revoke API Key
+
+Immediately revoke an API key:
+
+```bash
+DELETE /v1/auth/keys/{key_id}
+```
+
+### Update API Key
+
+Modify API key permissions or restrictions:
+
+```bash
+PATCH /v1/auth/keys/{key_id}
+{
+  "name": "Updated Key Name",
+  "permissions": ["groups:read", "members:read"],
+  "restrictions": {
+    "rate_limit": 150,
+    "expires_at": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+## Environment-Specific Keys
+
+### Development Environment
+
+```bash
+# .env.development
+SYNERA_API_KEY=sk_test_development_key_here
+SYNERA_API_URL=https://api.synera.cc/v1
+```
+
+### Production Environment
+
+```bash
+# .env.production
+SYNERA_API_KEY=sk_live_production_key_here
+SYNERA_API_URL=https://api.synera.cc/v1
+```
+
+### Configuration Example
+
+<CodeGroup>
+```javascript Node.js
+const config = {
+  apiKey: process.env.SYNERA_API_KEY,
+  apiUrl: process.env.SYNERA_API_URL || 'https://api.synera.cc/v1',
+  timeout: 30000
+};
+
+const headers = {
+  'Authorization': `Bearer ${config.apiKey}`,
+  'Content-Type': 'application/json',
+  'User-Agent': 'MyApp/1.0.0'
+};
+```
+
+```python Python
+import os
+from typing import Dict
+
+class SyneraConfig:
+    def __init__(self):
+        self.api_key = os.getenv('SYNERA_API_KEY')
+        self.api_url = os.getenv('SYNERA_API_URL', 'https://api.synera.cc/v1')
+        self.timeout = 30
+    
+    @property
+    def headers(self) -> Dict[str, str]:
+        return {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json',
+            'User-Agent': 'MyApp/1.0.0'
+        }
+```
+</CodeGroup>
+
+---
+
+<Note>
+  Always keep your API keys secure and follow security best practices. If you suspect a key has been compromised, revoke it immediately and generate a new one.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Make Your First Request" icon="play" href="/api-reference/endpoint/get-user">
+    Try making your first authenticated API request
+  </Card>
+  <Card title="Error Handling" icon="exclamation-triangle" href="/api-reference/errors">
+    Learn how to handle API errors properly
+  </Card>
+  <Card title="Rate Limiting" icon="gauge" href="/api-reference/rate-limiting">
+    Understand rate limits and how to work with them
+  </Card>
+</CardGroup>

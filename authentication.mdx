@@ -1,0 +1,179 @@
+---
+title: 'Authentication'
+description: 'Learn how to authenticate with Synera and connect your Roblox group'
+icon: 'key'
+---
+
+## Overview
+
+Synera uses secure authentication methods to connect your Discord server with your Roblox group. This ensures that only authorized users can manage rankings and access sensitive group information.
+
+## Discord Authentication
+
+Synera automatically handles Discord authentication through OAuth2 when you invite the bot to your server.
+
+### Required Permissions
+
+When inviting Synera, ensure the bot has these essential permissions:
+
+<AccordionGroup>
+  <Accordion title="Essential Permissions" icon="shield-check">
+    - **Manage Roles**: Required to sync Discord roles with Roblox ranks
+    - **Send Messages**: For command responses and notifications
+    - **Use Slash Commands**: To register and respond to slash commands
+    - **Read Message History**: For context and audit logging
+    - **Embed Links**: For rich embed responses
+  </Accordion>
+
+  <Accordion title="Optional Permissions" icon="gear">
+    - **Manage Nicknames**: To update member nicknames with Roblox usernames
+    - **Kick Members**: For advanced moderation features
+    - **Ban Members**: For security and anti-abuse measures
+  </Accordion>
+</AccordionGroup>
+
+## Roblox Group Authentication
+
+To connect your Roblox group, you'll need to provide authentication credentials during the setup process.
+
+### Setup Process
+
+<Steps>
+  <Step title="Run Setup Command">
+    Execute `/setup_community` in your Discord server
+  </Step>
+  <Step title="Provide Group Information">
+    Enter your Roblox group ID and verify ownership
+  </Step>
+  <Step title="Authentication Method">
+    Choose your preferred authentication method (see options below)
+  </Step>
+  <Step title="Verify Connection">
+    Synera will test the connection and confirm successful setup
+  </Step>
+</Steps>
+
+### Authentication Methods
+
+<Tabs>
+  <Tab title="Roblox Cookie (Recommended)">
+    The most reliable method for group management.
+
+    <Warning>
+      Never share your Roblox cookie with anyone. Synera encrypts and securely stores this information.
+    </Warning>
+
+    **How to get your Roblox cookie:**
+    1. Log into Roblox in your browser
+    2. Open Developer Tools (F12)
+    3. Go to Application/Storage → Cookies
+    4. Find `.ROBLOSECURITY` cookie
+    5. Copy the value (starts with `_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_`)
+
+    ```bash
+    /setup_community group_id:123456 auth_method:cookie
+    ```
+  </Tab>
+
+  <Tab title="API Key">
+    For users who prefer API-based authentication.
+
+    **Requirements:**
+    - Roblox Premium subscription
+    - API access enabled on your account
+    - Group ownership or sufficient permissions
+
+    ```bash
+    /setup_community group_id:123456 auth_method:api_key api_key:your_api_key
+    ```
+  </Tab>
+</Tabs>
+
+## Security Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Secure Storage" icon="lock">
+    All authentication credentials are encrypted using industry-standard AES-256 encryption and stored securely in compliance with UK GDPR regulations.
+  </Card>
+  <Card title="Access Control" icon="users-gear">
+    Implement role-based permissions in Discord to control who can use ranking commands and access sensitive features.
+  </Card>
+  <Card title="Regular Audits" icon="magnifying-glass">
+    Regularly review your group's audit logs and Synera's activity logs to ensure all actions are authorized.
+  </Card>
+  <Card title="Credential Rotation" icon="arrows-rotate">
+    Periodically update your authentication credentials, especially if you suspect they may have been compromised.
+  </Card>
+</CardGroup>
+
+## Troubleshooting Authentication
+
+<AccordionGroup>
+  <Accordion title="Invalid Roblox Cookie" icon="exclamation-triangle">
+    **Symptoms:** Commands fail with authentication errors
+    
+    **Solutions:**
+    - Ensure you copied the complete cookie value
+    - Check that you're logged into the correct Roblox account
+    - Verify the account has sufficient group permissions
+    - Re-run the setup command with a fresh cookie
+  </Accordion>
+
+  <Accordion title="Insufficient Permissions" icon="ban">
+    **Symptoms:** "Access denied" or "Insufficient permissions" errors
+    
+    **Solutions:**
+    - Verify you own the Roblox group or have admin permissions
+    - Check that the group allows API access
+    - Ensure your Discord role has permission to use Synera commands
+  </Accordion>
+
+  <Accordion title="Connection Timeout" icon="clock">
+    **Symptoms:** Setup command times out or fails to connect
+    
+    **Solutions:**
+    - Check Roblox's service status
+    - Verify your internet connection
+    - Try the setup command again after a few minutes
+    - Contact support if the issue persists
+  </Accordion>
+</AccordionGroup>
+
+## API Authentication
+
+For developers integrating with Synera's API, authentication is handled through API keys.
+
+### Getting an API Key
+
+<Steps>
+  <Step title="Access Dashboard">
+    Visit the [Synera Dashboard](https://dashboard.synera.cc) and log in
+  </Step>
+  <Step title="Navigate to API">
+    Go to the API section in your server settings
+  </Step>
+  <Step title="Generate Key">
+    Click "Generate New API Key" and copy the generated key
+  </Step>
+  <Step title="Configure Permissions">
+    Set the appropriate permissions for your API key
+  </Step>
+</Steps>
+
+### Using API Keys
+
+Include your API key in the Authorization header of your requests:
+
+```bash
+curl -X GET "https://api.synera.cc/v1/groups/123456" \
+  -H "Authorization: Bearer your_api_key_here" \
+  -H "Content-Type: application/json"
+```
+
+<Note>
+  API keys should be kept secure and never exposed in client-side code. Store them as environment variables or in secure configuration files.
+</Note>
+
+---
+
+Need help with authentication? Join our [Discord server](https://discord.gg/synera) or contact our support team at [team@synera.cc](mailto:team@synera.cc).

@@ -1,0 +1,397 @@
+---
+title: 'Community Setup Guide'
+description: 'Complete guide to setting up Synera for your Discord server and Roblox group'
+icon: 'rocket'
+---
+
+## Prerequisites
+
+Before setting up Synera, ensure you have:
+
+<CardGroup cols={2}>
+  <Card title="Discord Requirements" icon="discord">
+    - Administrator permissions in your Discord server
+    - A Discord server with at least 10 members (recommended)
+    - Understanding of Discord roles and permissions
+  </Card>
+  <Card title="Roblox Requirements" icon="cube">
+    - Owner or admin permissions in your Roblox group
+    - Active Roblox group with established rank structure
+    - Access to your Roblox account credentials
+  </Card>
+</CardGroup>
+
+## Step 1: Invite Synera to Your Server
+
+<Steps>
+  <Step title="Get the Invitation Link">
+    Visit our [official website](https://synera.cc) or use this direct link:
+    ```
+    https://discord.com/oauth2/authorize?client_id=YOUR_BOT_ID&permissions=8&scope=bot%20applications.commands
+    ```
+  </Step>
+  <Step title="Select Your Server">
+    Choose the Discord server where you want to add Synera from the dropdown menu
+  </Step>
+  <Step title="Review Permissions">
+    Ensure all required permissions are selected:
+    - Manage Roles
+    - Send Messages
+    - Use Slash Commands
+    - Read Message History
+    - Embed Links
+  </Step>
+  <Step title="Authorize the Bot">
+    Click "Authorize" to add Synera to your server
+  </Step>
+</Steps>
+
+<Note>
+  Synera will appear in your member list with a "BOT" tag. The bot may appear offline initially while it loads your server configuration.
+</Note>
+
+## Step 2: Initial Configuration
+
+Once Synera is in your server, you'll need to run the initial setup:
+
+### Run the Setup Command
+
+```bash
+/setup_community
+```
+
+This command will guide you through the configuration process with an interactive setup wizard.
+
+### Setup Wizard Flow
+
+<Tabs>
+  <Tab title="Basic Information">
+    **Group ID Input**
+    ```bash
+    /setup_community group_id:12345678
+    ```
+    
+    **How to find your Group ID:**
+    1. Go to your Roblox group page
+    2. Look at the URL: `https://www.roblox.com/groups/12345678/Group-Name`
+    3. The number after `/groups/` is your Group ID
+    
+    **Group Verification**
+    - Synera will verify the group exists
+    - Check if you have sufficient permissions
+    - Display group information for confirmation
+  </Tab>
+  
+  <Tab title="Authentication">
+    **Choose Authentication Method**
+    
+    <AccordionGroup>
+      <Accordion title="Cookie Authentication (Recommended)" icon="cookie">
+        Most reliable method for all group operations.
+        
+        **Steps:**
+        1. Log into Roblox in your browser
+        2. Open Developer Tools (F12)
+        3. Navigate to Application → Cookies → roblox.com
+        4. Find `.ROBLOSECURITY` cookie
+        5. Copy the entire value
+        6. Paste it securely in the setup (DM with bot)
+      </Accordion>
+      
+      <Accordion title="API Key Authentication" icon="key">
+        For users with Roblox Premium and API access.
+        
+        **Requirements:**
+        - Roblox Premium subscription
+        - API access enabled
+        - Valid API key generated
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+  
+  <Tab title="Role Mapping">
+    **Automatic Role Creation**
+    
+    Synera will offer to create Discord roles that match your Roblox ranks:
+    
+    ```
+    ✅ Create role "Group Owner" for rank "Owner" (255)
+    ✅ Create role "Co-Owner" for rank "Co-Owner" (200)  
+    ✅ Create role "Administrator" for rank "Administrator" (150)
+    ✅ Create role "Moderator" for rank "Moderator" (100)
+    ✅ Create role "Member" for rank "Member" (50)
+    ```
+    
+    **Manual Role Mapping**
+    
+    If you prefer to use existing roles:
+    ```bash
+    /config role_mapping rank:100 discord_role:@Moderator
+    ```
+  </Tab>
+</Tabs>
+
+## Step 3: Permission Configuration
+
+Set up who can use Synera's commands in your server:
+
+### Basic Permission Setup
+
+```bash
+# Allow Admins to use all ranking commands
+/config permissions role:@Admin commands:all
+
+# Allow Moderators to promote/demote only
+/config permissions role:@Moderator commands:promote,demote
+
+# Allow Members to view information only
+/config permissions role:@Member commands:memberinfo,groupinfo
+```
+
+### Advanced Permission Configuration
+
+<CodeGroup>
+```json Basic Setup
+{
+  "permissions": {
+    "Admin": {
+      "commands": ["*"],
+      "restrictions": []
+    },
+    "Moderator": {
+      "commands": ["promote", "demote", "memberinfo"],
+      "max_rank": "Member",
+      "restrictions": ["cannot_rank_staff"]
+    }
+  }
+}
+```
+
+```json Advanced Setup
+{
+  "permissions": {
+    "Owner": {
+      "commands": ["*"],
+      "restrictions": [],
+      "bypass_cooldowns": true
+    },
+    "Admin": {
+      "commands": ["rank", "promote", "demote", "massrank"],
+      "max_rank": "Moderator", 
+      "restrictions": ["require_reason"],
+      "cooldown": "30s"
+    },
+    "Moderator": {
+      "commands": ["promote", "demote"],
+      "max_rank": "Member",
+      "restrictions": ["cannot_rank_staff", "require_reason"],
+      "cooldown": "60s"
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Step 4: Testing & Verification
+
+### Test Basic Functionality
+
+<Steps>
+  <Step title="Test Information Commands">
+    ```bash
+    /groupinfo
+    /memberinfo user:@yourself
+    ```
+    Verify that group information displays correctly
+  </Step>
+  <Step title="Test Role Sync">
+    ```bash
+    /sync target:@yourself
+    ```
+    Check if your Discord roles match your Roblox rank
+  </Step>
+  <Step title="Test Ranking (if applicable)">
+    ```bash
+    /promote user:@testmember reason:"Setup test"
+    ```
+    Try a safe ranking operation to verify functionality
+  </Step>
+  <Step title="Verify Audit Logs">
+    Check that all actions are being logged properly
+  </Step>
+</Steps>
+
+### Common Setup Issues
+
+<AccordionGroup>
+  <Accordion title="Authentication Failed" icon="exclamation-triangle">
+    **Symptoms:** "Invalid credentials" or "Authentication error"
+    
+    **Solutions:**
+    - Verify you copied the complete Roblox cookie
+    - Ensure you're logged into the correct Roblox account
+    - Check that your account has group permissions
+    - Try logging out and back into Roblox, then get a fresh cookie
+  </Accordion>
+  
+  <Accordion title="Permission Denied" icon="ban">
+    **Symptoms:** "Insufficient permissions" errors
+    
+    **Solutions:**
+    - Verify you own the Roblox group or have admin permissions
+    - Check that Synera has the required Discord permissions
+    - Ensure your Discord role has permission to use commands
+    - Review the permission configuration
+  </Accordion>
+  
+  <Accordion title="Role Sync Issues" icon="arrows-rotate">
+    **Symptoms:** Discord roles don't match Roblox ranks
+    
+    **Solutions:**
+    - Run `/sync target:all` to force synchronization
+    - Check role mapping configuration
+    - Verify role hierarchy in Discord settings
+    - Ensure Synera can manage the roles
+  </Accordion>
+  
+  <Accordion title="Commands Not Appearing" icon="terminal">
+    **Symptoms:** Slash commands don't show up
+    
+    **Solutions:**
+    - Wait a few minutes for Discord to sync commands
+    - Check if Synera has "Use Slash Commands" permission
+    - Try leaving and rejoining the server
+    - Contact support if commands still don't appear after 10 minutes
+  </Accordion>
+</AccordionGroup>
+
+## Step 5: Advanced Configuration
+
+### Custom Command Channels
+
+Restrict bot usage to specific channels:
+
+```bash
+/config channels allowed:#bot-commands,#staff-only
+/config channels ranking_only:#ranking-commands
+```
+
+### Automatic Synchronization
+
+Configure automatic role synchronization:
+
+```bash
+# Enable automatic sync when members join
+/config auto_sync join:enabled
+
+# Enable periodic sync (every 6 hours)
+/config auto_sync periodic:enabled interval:6h
+
+# Enable sync on role changes
+/config auto_sync role_changes:enabled
+```
+
+### Logging Configuration
+
+Set up comprehensive logging:
+
+```bash
+# Set audit log channel
+/config logging channel:#audit-logs
+
+# Configure log levels
+/config logging level:detailed
+
+# Enable specific log types
+/config logging types:rankings,permissions,errors
+```
+
+### Webhook Integration
+
+Connect external services:
+
+```bash
+# Add webhook for ranking notifications
+/config webhook add url:https://your-webhook-url type:rankings
+
+# Add webhook for member joins
+/config webhook add url:https://your-webhook-url type:member_events
+```
+
+## Step 6: Member Onboarding
+
+### Automatic Member Processing
+
+When new members join your Discord:
+
+1. **Verification Process**
+   - Synera checks if they're in your Roblox group
+   - Automatically assigns appropriate Discord roles
+   - Sends welcome message with instructions
+
+2. **Manual Verification**
+   - Members can link their Roblox account using `/verify`
+   - Staff can manually verify members using `/verify user:@member`
+
+### Member Instructions
+
+Create a welcome message for new members:
+
+```markdown
+## Welcome to [Your Server Name]! 
+
+To get your roles and access all channels:
+
+1. Make sure you're in our Roblox group: [Group Link]
+2. Use `/verify` in #bot-commands to link your account
+3. Your Discord roles will automatically match your group rank
+
+Need help? Contact our staff or use `/help` for more information.
+```
+
+## Maintenance & Updates
+
+### Regular Maintenance Tasks
+
+<CardGroup cols={2}>
+  <Card title="Weekly Tasks" icon="calendar-week">
+    - Review audit logs for unusual activity
+    - Check synchronization accuracy
+    - Update role mappings if ranks changed
+    - Monitor bot performance metrics
+  </Card>
+  <Card title="Monthly Tasks" icon="calendar">
+    - Review and update permissions
+    - Clean up unused roles
+    - Update member verification status
+    - Review and optimize configuration
+  </Card>
+</CardGroup>
+
+### Staying Updated
+
+- **Join our Discord**: Get notified of updates and new features
+- **Check Documentation**: Regular updates to guides and features
+- **Monitor Changelog**: Track new features and bug fixes
+- **Feedback**: Share suggestions for improvements
+
+---
+
+<Note>
+  Setup complete! Your community is now ready to use Synera. 
+  For ongoing support, join our [Discord server](https://discord.gg/synera) or contact [team@synera.cc](mailto:team@synera.cc).
+</Note>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Custom Commands" icon="terminal" href="/guides/custom-commands">
+    Learn how to create custom commands for your community
+  </Card>
+  <Card title="Advanced Permissions" icon="shield-check" href="/guides/permissions">
+    Set up complex permission systems and restrictions
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/guides/troubleshooting">
+    Common issues and their solutions
+  </Card>
+</CardGroup>

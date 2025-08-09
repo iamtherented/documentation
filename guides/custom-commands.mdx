@@ -1,0 +1,520 @@
+---
+title: 'Custom Commands'
+description: 'Create and manage custom commands tailored to your community'
+icon: 'terminal'
+---
+
+## Overview
+
+Synera's custom command system allows you to create specialized commands that fit your community's unique needs. Whether you want shortcuts for common operations, complex workflows, or community-specific features, custom commands provide the flexibility you need.
+
+## Command Types
+
+<CardGroup cols={2}>
+  <Card title="Alias Commands" icon="link">
+    Create shortcuts for existing commands with pre-filled parameters
+  </Card>
+  <Card title="Macro Commands" icon="list-check">
+    Execute multiple commands in sequence with a single trigger
+  </Card>
+  <Card title="Conditional Commands" icon="code-branch">
+    Commands that execute different actions based on conditions
+  </Card>
+  <Card title="Template Commands" icon="file-text">
+    Commands with customizable templates and variables
+  </Card>
+</CardGroup>
+
+## Creating Custom Commands
+
+### Basic Command Creation
+
+Use the `/custom create` command to start building your custom command:
+
+```bash
+/custom create name:quickpromote description:"Quickly promote active members"
+```
+
+### Command Builder Interface
+
+Synera provides an interactive command builder:
+
+<Tabs>
+  <Tab title="Basic Settings">
+    **Command Configuration**
+    ```json
+    {
+      "name": "quickpromote",
+      "description": "Quickly promote active members",
+      "category": "ranking",
+      "permissions": ["Moderator", "Admin"],
+      "cooldown": "30s",
+      "enabled": true
+    }
+    ```
+    
+    **Parameters**
+    - `name`: Command trigger (must be unique)
+    - `description`: Help text shown to users
+    - `category`: Organizational category
+    - `permissions`: Required roles to use command
+    - `cooldown`: Time between uses per user
+  </Tab>
+  
+  <Tab title="Command Logic">
+    **Action Definition**
+    ```yaml
+    actions:
+      - type: "validate_user"
+        parameters:
+          check_membership: true
+          min_days_in_group: 7
+          
+      - type: "rank_member"
+        parameters:
+          action: "promote"
+          reason: "Active member promotion via quickpromote"
+          
+      - type: "send_message"
+        parameters:
+          content: "✅ {user} has been promoted to {new_rank}!"
+          ephemeral: false
+    ```
+  </Tab>
+  
+  <Tab title="Advanced Options">
+    **Conditional Logic**
+    ```yaml
+    conditions:
+      - if: "user.current_rank < 50"
+        then:
+          - type: "rank_member"
+            parameters:
+              target_rank: 50
+      - elif: "user.current_rank < 100"
+        then:
+          - type: "rank_member"
+            parameters:
+              target_rank: 100
+      - else:
+          - type: "send_error"
+            parameters:
+              message: "User is already at maximum promotable rank"
+    ```
+  </Tab>
+</Tabs>
+
+## Command Examples
+
+### 1. Quick Promotion Command
+
+A command that promotes members based on activity and current rank:
+
+<CodeGroup>
+```yaml Command Definition
+name: quickpromote
+description: Promote active members automatically
+permissions: ["Moderator", "Admin"]
+parameters:
+  - name: user
+    type: user
+    required: true
+    description: Member to promote
+  - name: skip_checks
+    type: boolean
+    required: false
+    description: Skip activity checks (Admin only)
+
+actions:
+  - type: validate_permissions
+    conditions:
+      - if: "skip_checks == true"
+        require_role: "Admin"
+        
+  - type: check_activity
+    skip_if: "skip_checks == true"
+    parameters:
+      min_messages: 10
+      days_period: 7
+      
+  - type: promote_member
+    parameters:
+      reason: "Automatic promotion - active member"
+      
+  - type: log_action
+    parameters:
+      channel: "#audit-logs"
+      include_reason: true
+```
+
+```bash Usage Examples
+# Basic promotion
+/quickpromote user:@JohnDoe
+
+# Skip activity checks (Admin only)
+/quickpromote user:@JohnDoe skip_checks:true
+```
+</CodeGroup>
+
+### 2. Mass Welcome Command
+
+Welcome new members and assign roles based on their Roblox rank:
+
+<CodeGroup>
+```yaml Command Definition
+name: masswelcome
+description: Welcome and setup multiple new members
+permissions: ["Admin"]
+parameters:
+  - name: members
+    type: user_list
+    required: true
+    description: List of members to welcome
+
+actions:
+  - type: foreach_user
+    actions:
+      - type: verify_roblox_account
+        on_fail: "skip_user"
+        
+      - type: sync_roles
+        parameters:
+          force_update: true
+          
+      - type: send_dm
+        parameters:
+          template: "welcome_message"
+          variables:
+            server_name: "{guild.name}"
+            user_rank: "{user.roblox_rank}"
+            
+      - type: log_action
+        parameters:
+          message: "Welcomed {user.mention} (Rank: {user.roblox_rank})"
+```
+
+```bash Usage Example
+/masswelcome members:@User1,@User2,@User3,@User4
+```
+</CodeGroup>
+
+### 3. Rank Report Command
+
+Generate detailed reports about group rankings:
+
+<CodeGroup>
+```yaml Command Definition
+name: rankreport
+description: Generate comprehensive ranking reports
+permissions: ["Admin", "Owner"]
+parameters:
+  - name: period
+    type: choice
+    choices: ["daily", "weekly", "monthly"]
+    required: true
+  - name: format
+    type: choice
+    choices: ["embed", "file", "both"]
+    default: "embed"
+
+actions:
+  - type: gather_data
+    parameters:
+      period: "{period}"
+      include_promotions: true
+      include_demotions: true
+      include_new_members: true
+      
+  - type: generate_report
+    parameters:
+      format: "{format}"
+      template: "ranking_report"
+      
+  - type: send_response
+    parameters:
+      ephemeral: false
+      ping_role: "@Admin"
+```
+
+```bash Usage Examples
+/rankreport period:weekly format:embed
+/rankreport period:monthly format:file
+```
+</CodeGroup>
+
+## Advanced Features
+
+### Variables and Templates
+
+Use dynamic variables in your custom commands:
+
+<AccordionGroup>
+  <Accordion title="User Variables" icon="user">
+    - `{user.mention}` - Discord mention
+    - `{user.username}` - Discord username
+    - `{user.roblox_username}` - Roblox username
+    - `{user.current_rank}` - Current Roblox rank
+    - `{user.join_date}` - Group join date
+    - `{user.last_active}` - Last activity timestamp
+  </Accordion>
+  
+  <Accordion title="Server Variables" icon="server">
+    - `{guild.name}` - Server name
+    - `{guild.member_count}` - Total members
+    - `{guild.owner}` - Server owner
+    - `{channel.name}` - Current channel name
+    - `{channel.mention}` - Channel mention
+  </Accordion>
+  
+  <Accordion title="Group Variables" icon="users">
+    - `{group.name}` - Roblox group name
+    - `{group.member_count}` - Group member count
+    - `{group.owner}` - Group owner
+    - `{group.description}` - Group description
+    - `{rank.name}` - Rank name
+    - `{rank.id}` - Rank ID number
+  </Accordion>
+  
+  <Accordion title="System Variables" icon="cog">
+    - `{timestamp}` - Current timestamp
+    - `{date}` - Current date
+    - `{time}` - Current time
+    - `{executor.mention}` - Command executor
+    - `{random.number}` - Random number
+    - `{random.choice:option1,option2}` - Random choice
+  </Accordion>
+</AccordionGroup>
+
+### Conditional Logic
+
+Implement complex decision-making in your commands:
+
+```yaml
+conditions:
+  - if: "user.current_rank >= 100"
+    then:
+      - type: send_error
+        message: "User is already a high rank and cannot be auto-promoted"
+        
+  - elif: "user.days_in_group < 30"
+    then:
+      - type: send_warning
+        message: "User has been in group for less than 30 days"
+      - type: require_confirmation
+        message: "Promote anyway?"
+        
+  - elif: "user.last_active > 7_days"
+    then:
+      - type: send_info
+        message: "User has been inactive for over a week"
+      - type: promote_member
+        parameters:
+          reason: "Promotion despite inactivity - manual override"
+          
+  - else:
+      - type: promote_member
+        parameters:
+          reason: "Standard promotion - all checks passed"
+```
+
+### Error Handling
+
+Robust error handling for reliable command execution:
+
+```yaml
+error_handling:
+  on_api_error:
+    - type: retry
+      max_attempts: 3
+      delay: "5s"
+    - type: send_error
+      message: "Failed to execute command due to API issues. Please try again later."
+      
+  on_permission_error:
+    - type: send_error
+      message: "Insufficient permissions to execute this action."
+      ephemeral: true
+      
+  on_validation_error:
+    - type: send_error
+      message: "Invalid input: {error_details}"
+      ephemeral: true
+      
+  on_timeout:
+    - type: send_warning
+      message: "Command execution timed out. Some actions may not have completed."
+```
+
+## Command Management
+
+### Listing Custom Commands
+
+View all your custom commands:
+
+```bash
+/custom list category:ranking
+/custom list enabled:true
+/custom list created_by:@AdminUser
+```
+
+### Editing Commands
+
+Modify existing custom commands:
+
+```bash
+# Edit command description
+/custom edit name:quickpromote description:"New description"
+
+# Update permissions
+/custom edit name:quickpromote permissions:Admin,Moderator,Helper
+
+# Enable/disable command
+/custom edit name:quickpromote enabled:false
+```
+
+### Command Analytics
+
+Track usage and performance:
+
+```bash
+# View command usage statistics
+/custom stats name:quickpromote period:monthly
+
+# View most used commands
+/custom stats top:10 period:weekly
+
+# View command performance
+/custom stats performance period:daily
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Design Principles" icon="lightbulb">
+    - Keep commands focused on single tasks
+    - Use clear, descriptive names
+    - Provide helpful descriptions and examples
+    - Include appropriate error messages
+  </Card>
+  <Card title="Security Considerations" icon="shield-check">
+    - Set appropriate permission requirements
+    - Validate all user inputs
+    - Use confirmation for destructive actions
+    - Log all command executions
+  </Card>
+  <Card title="Performance Tips" icon="zap">
+    - Minimize API calls where possible
+    - Use caching for frequently accessed data
+    - Implement reasonable cooldowns
+    - Batch operations when appropriate
+  </Card>
+  <Card title="User Experience" icon="heart">
+    - Provide clear feedback messages
+    - Use ephemeral responses for errors
+    - Include help text and examples
+    - Test commands thoroughly before deployment
+  </Card>
+</CardGroup>
+
+## Troubleshooting Custom Commands
+
+<AccordionGroup>
+  <Accordion title="Command Not Executing" icon="exclamation-triangle">
+    **Common Causes:**
+    - Syntax errors in command definition
+    - Missing required permissions
+    - Invalid parameter types
+    - API rate limits exceeded
+    
+    **Solutions:**
+    - Use `/custom validate name:command_name` to check syntax
+    - Verify permission requirements
+    - Check parameter definitions
+    - Review error logs for specific issues
+  </Accordion>
+  
+  <Accordion title="Unexpected Behavior" icon="bug">
+    **Common Causes:**
+    - Logic errors in conditional statements
+    - Variable substitution issues
+    - Incorrect parameter handling
+    - Race conditions in complex commands
+    
+    **Solutions:**
+    - Test commands in a development environment
+    - Use debug mode to trace execution
+    - Simplify complex logic into smaller steps
+    - Add logging at key decision points
+  </Accordion>
+  
+  <Accordion title="Performance Issues" icon="clock">
+    **Common Causes:**
+    - Too many API calls
+    - Inefficient loops or iterations
+    - Large data processing
+    - Network latency issues
+    
+    **Solutions:**
+    - Optimize API usage with batching
+    - Implement caching where appropriate
+    - Use pagination for large datasets
+    - Add timeout handling
+  </Accordion>
+</AccordionGroup>
+
+## Command Templates
+
+### Quick Start Templates
+
+Get started quickly with these pre-built templates:
+
+<Tabs>
+  <Tab title="Basic Ranking">
+    ```bash
+    /custom template use name:basic_ranking
+    ```
+    Creates commands for promote, demote, and rank operations with safety checks.
+  </Tab>
+  
+  <Tab title="Member Management">
+    ```bash
+    /custom template use name:member_management
+    ```
+    Creates commands for member verification, role sync, and information display.
+  </Tab>
+  
+  <Tab title="Moderation Tools">
+    ```bash
+    /custom template use name:moderation_tools
+    ```
+    Creates commands for warnings, temporary restrictions, and audit functions.
+  </Tab>
+  
+  <Tab title="Analytics & Reports">
+    ```bash
+    /custom template use name:analytics_reports
+    ```
+    Creates commands for generating various reports and statistics.
+  </Tab>
+</Tabs>
+
+---
+
+<Note>
+  Custom commands are a powerful feature that can greatly enhance your community management. 
+  Start with simple commands and gradually build more complex ones as you become familiar with the system.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Advanced Permissions" icon="shield-check" href="/guides/permissions">
+    Learn about complex permission systems and restrictions
+  </Card>
+  <Card title="API Integration" icon="code" href="/api-reference">
+    Integrate custom commands with external services
+  </Card>
+  <Card title="Community Examples" icon="users" href="https://discord.gg/synera">
+    See how other communities use custom commands
+  </Card>
+</CardGroup>

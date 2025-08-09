@@ -1,0 +1,793 @@
+---
+title: 'Webhooks'
+openapi: 'POST /webhooks'
+---
+
+Set up webhooks to receive real-time notifications about events in your Roblox group and Discord server. Webhooks allow your applications to react immediately to changes without constantly polling the API.
+
+## Webhook Events
+
+<CardGroup cols={2}>
+  <Card title="Member Events" icon="user">
+    - `member.joined` - New member joined the group
+    - `member.left` - Member left the group  
+    - `member.ranked` - Member's rank was changed
+    - `member.verified` - Member linked their Discord account
+  </Card>
+  <Card title="Group Events" icon="users">
+    - `group.updated` - Group information changed
+    - `group.rank_created` - New rank was created
+    - `group.rank_deleted` - Rank was deleted
+    - `group.settings_changed` - Group settings modified
+  </Card>
+  <Card title="Discord Events" icon="discord">
+    - `discord.member_joined` - New member joined Discord server
+    - `discord.member_left` - Member left Discord server
+    - `discord.role_updated` - Discord role was modified
+    - `discord.sync_completed` - Role synchronization completed
+  </Card>
+  <Card title="System Events" icon="cog">
+    - `system.error` - System error occurred
+    - `system.maintenance` - Maintenance mode activated
+    - `api.rate_limit` - API rate limit warning
+    - `auth.expired` - Authentication credentials expired
+  </Card>
+</CardGroup>
+
+## Create Webhook
+
+<ParamField body="url" type="string" required>
+  The URL where webhook payloads will be sent
+</ParamField>
+
+<ParamField body="events" type="array" required>
+  Array of event types to subscribe to
+</ParamField>
+
+<ParamField body="secret" type="string">
+  Secret key for webhook signature verification (recommended)
+</ParamField>
+
+<ParamField body="name" type="string">
+  Descriptive name for the webhook
+</ParamField>
+
+<ParamField body="active" type="boolean" default="true">
+  Whether the webhook is active
+</ParamField>
+
+<ParamField body="retry_config" type="object">
+  Configuration for retry behavior
+  <Expandable title="Retry Configuration">
+    <ParamField body="max_attempts" type="number" default="3">
+      Maximum number of retry attempts
+    </ParamField>
+    <ParamField body="initial_delay" type="number" default="1000">
+      Initial delay in milliseconds before first retry
+    </ParamField>
+    <ParamField body="max_delay" type="number" default="30000">
+      Maximum delay in milliseconds between retries
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the webhook was created successfully
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="Webhook Information">
+    <ResponseField name="id" type="string">
+      Unique webhook identifier
+    </ResponseField>
+    
+    <ResponseField name="url" type="string">
+      Webhook endpoint URL
+    </ResponseField>
+    
+    <ResponseField name="events" type="array">
+      Subscribed event types
+    </ResponseField>
+    
+    <ResponseField name="name" type="string">
+      Webhook name
+    </ResponseField>
+    
+    <ResponseField name="active" type="boolean">
+      Whether the webhook is active
+    </ResponseField>
+    
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp when webhook was created
+    </ResponseField>
+    
+    <ResponseField name="last_delivery" type="object">
+      <Expandable title="Last Delivery Info">
+        <ResponseField name="timestamp" type="string">
+          Timestamp of last delivery attempt
+        </ResponseField>
+        <ResponseField name="status" type="string">
+          Delivery status: `success`, `failed`, `pending`
+        </ResponseField>
+        <ResponseField name="response_code" type="number">
+          HTTP response code from your endpoint
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl -X POST "https://api.synera.cc/v1/webhooks" \
+  -H "Authorization: Bearer sk_live_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-app.com/webhooks/synera",
+    "events": ["member.ranked", "member.joined", "member.left"],
+    "secret": "your_webhook_secret_key",
+    "name": "Production Webhook",
+    "retry_config": {
+      "max_attempts": 5,
+      "initial_delay": 2000,
+      "max_delay": 60000
+    }
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.synera.cc/v1/webhooks', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer sk_live_abc123...',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    url: 'https://your-app.com/webhooks/synera',
+    events: ['member.ranked', 'member.joined', 'member.left'],
+    secret: 'your_webhook_secret_key',
+    name: 'Production Webhook',
+    retry_config: {
+      max_attempts: 5,
+      initial_delay: 2000,
+      max_delay: 60000
+    }
+  })
+});
+
+const data = await response.json();
+console.log(data);
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Bearer sk_live_abc123...',
+    'Content-Type': 'application/json'
+}
+
+payload = {
+    'url': 'https://your-app.com/webhooks/synera',
+    'events': ['member.ranked', 'member.joined', 'member.left'],
+    'secret': 'your_webhook_secret_key',
+    'name': 'Production Webhook',
+    'retry_config': {
+        'max_attempts': 5,
+        'initial_delay': 2000,
+        'max_delay': 60000
+    }
+}
+
+response = requests.post(
+    'https://api.synera.cc/v1/webhooks',
+    headers=headers,
+    json=payload
+)
+
+data = response.json()
+print(data)
+```
+
+```php PHP
+<?php
+$curl = curl_init();
+
+$payload = json_encode([
+    'url' => 'https://your-app.com/webhooks/synera',
+    'events' => ['member.ranked', 'member.joined', 'member.left'],
+    'secret' => 'your_webhook_secret_key',
+    'name' => 'Production Webhook',
+    'retry_config' => [
+        'max_attempts' => 5,
+        'initial_delay' => 2000,
+        'max_delay' => 60000
+    ]
+]);
+
+curl_setopt_array($curl, [
+    CURLOPT_URL => 'https://api.synera.cc/v1/webhooks',
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => $payload,
+    CURLOPT_HTTPHEADER => [
+        'Authorization: Bearer sk_live_abc123...',
+        'Content-Type: application/json'
+    ]
+]);
+
+$response = curl_exec($curl);
+$data = json_decode($response, true);
+
+curl_close($curl);
+print_r($data);
+?>
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response
+{
+  "success": true,
+  "data": {
+    "id": "wh_abc123def456",
+    "url": "https://your-app.com/webhooks/synera",
+    "events": ["member.ranked", "member.joined", "member.left"],
+    "name": "Production Webhook",
+    "active": true,
+    "created_at": "2024-01-20T16:00:00Z",
+    "last_delivery": null,
+    "retry_config": {
+      "max_attempts": 5,
+      "initial_delay": 2000,
+      "max_delay": 60000
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-20T16:00:00Z",
+    "request_id": "req_abc123def456"
+  }
+}
+```
+
+```json Error Response - Invalid URL
+{
+  "success": false,
+  "error": {
+    "code": "invalid_webhook_url",
+    "message": "Webhook URL must be a valid HTTPS endpoint",
+    "details": {
+      "provided_url": "http://insecure-endpoint.com/webhook",
+      "requirements": [
+        "Must use HTTPS protocol",
+        "Must be publicly accessible",
+        "Must return 2xx status codes"
+      ]
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-20T16:00:00Z",
+    "request_id": "req_def456ghi789"
+  }
+}
+```
+
+</ResponseExample>
+
+## Webhook Payload Structure
+
+All webhook payloads follow a consistent structure:
+
+```json
+{
+  "event": "member.ranked",
+  "timestamp": "2024-01-20T16:00:00Z",
+  "webhook_id": "wh_abc123def456",
+  "delivery_id": "del_xyz789uvw012",
+  "data": {
+    // Event-specific data
+  },
+  "group_id": "123456",
+  "signature": "sha256=abc123..."
+}
+```
+
+## Event Payload Examples
+
+<Tabs>
+  <Tab title="Member Ranked">
+    ```json
+    {
+      "event": "member.ranked",
+      "timestamp": "2024-01-20T16:00:00Z",
+      "webhook_id": "wh_abc123def456",
+      "delivery_id": "del_xyz789uvw012",
+      "data": {
+        "member": {
+          "id": "789012",
+          "username": "JohnDoe_Official",
+          "discord_id": "987654321098765432"
+        },
+        "rank_change": {
+          "from": {
+            "id": 50,
+            "name": "Member"
+          },
+          "to": {
+            "id": 100,
+            "name": "Moderator"
+          }
+        },
+        "executor": {
+          "id": "111222333",
+          "username": "AdminUser",
+          "method": "discord_command"
+        },
+        "reason": "Promotion for excellent performance"
+      },
+      "group_id": "123456"
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Member Joined">
+    ```json
+    {
+      "event": "member.joined",
+      "timestamp": "2024-01-20T16:00:00Z",
+      "webhook_id": "wh_abc123def456",
+      "delivery_id": "del_xyz789uvw013",
+      "data": {
+        "member": {
+          "id": "345678",
+          "username": "NewMember123",
+          "join_date": "2024-01-20T16:00:00Z"
+        },
+        "initial_rank": {
+          "id": 1,
+          "name": "Guest"
+        },
+        "source": "roblox_direct"
+      },
+      "group_id": "123456"
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Discord Sync">
+    ```json
+    {
+      "event": "discord.sync_completed",
+      "timestamp": "2024-01-20T16:00:00Z",
+      "webhook_id": "wh_abc123def456",
+      "delivery_id": "del_xyz789uvw014",
+      "data": {
+        "sync_summary": {
+          "total_members": 1247,
+          "synced_members": 1198,
+          "failed_members": 12,
+          "skipped_members": 37
+        },
+        "duration": "45.2s",
+        "trigger": "scheduled",
+        "errors": [
+          {
+            "member_id": "999888777",
+            "error": "discord_account_not_linked",
+            "message": "Member has not linked their Discord account"
+          }
+        ]
+      },
+      "group_id": "123456"
+    }
+    ```
+  </Tab>
+  
+  <Tab title="System Error">
+    ```json
+    {
+      "event": "system.error",
+      "timestamp": "2024-01-20T16:00:00Z",
+      "webhook_id": "wh_abc123def456",
+      "delivery_id": "del_xyz789uvw015",
+      "data": {
+        "error": {
+          "code": "roblox_api_timeout",
+          "message": "Roblox API request timed out",
+          "severity": "warning"
+        },
+        "affected_operations": [
+          "member_ranking",
+          "group_sync"
+        ],
+        "recovery_action": "automatic_retry",
+        "estimated_resolution": "2024-01-20T16:05:00Z"
+      },
+      "group_id": "123456"
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Webhook Security
+
+### Signature Verification
+
+Verify webhook authenticity using HMAC-SHA256 signatures:
+
+<CodeGroup>
+
+```javascript Node.js
+const crypto = require('crypto');
+
+function verifyWebhookSignature(payload,signature, secret) {
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(payload, 'utf8')
+    .digest('hex');
+  
+  const providedSignature = signature.replace('sha256=', '');
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(expectedSignature, 'hex'),
+    Buffer.from(providedSignature, 'hex')
+  );
+}
+
+// Express.js middleware
+app.use('/webhooks/synera', express.raw({ type: 'application/json' }));
+
+app.post('/webhooks/synera', (req, res) => {
+  const signature = req.headers['x-synera-signature'];
+  const payload = req.body;
+  
+  if (!verifyWebhookSignature(payload, signature, process.env.WEBHOOK_SECRET)) {
+    return res.status(401).send('Invalid signature');
+  }
+  
+  const event = JSON.parse(payload);
+  console.log('Received webhook:', event.event);
+  
+  res.status(200).send('OK');
+});
+```
+
+```python Python
+import hmac
+import hashlib
+import json
+from flask import Flask, request, abort
+
+app = Flask(__name__)
+
+def verify_webhook_signature(payload: bytes, signature: str, secret: str) -> bool:
+    """Verify webhook signature using HMAC-SHA256."""
+    expected_signature = hmac.new(
+        secret.encode('utf-8'),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+    
+    provided_signature = signature.replace('sha256=', '')
+    
+    return hmac.compare_digest(expected_signature, provided_signature)
+
+@app.route('/webhooks/synera', methods=['POST'])
+def handle_webhook():
+    signature = request.headers.get('X-Synera-Signature')
+    payload = request.get_data()
+    
+    if not verify_webhook_signature(payload, signature, os.getenv('WEBHOOK_SECRET')):
+        abort(401, 'Invalid signature')
+    
+    event = json.loads(payload)
+    print(f"Received webhook: {event['event']}")
+    
+    return 'OK', 200
+```
+
+```php PHP
+<?php
+function verifyWebhookSignature($payload, $signature, $secret) {
+    $expectedSignature = hash_hmac('sha256', $payload, $secret);
+    $providedSignature = str_replace('sha256=', '', $signature);
+    
+    return hash_equals($expectedSignature, $providedSignature);
+}
+
+// Handle webhook
+$payload = file_get_contents('php://input');
+$signature = $_SERVER['HTTP_X_SYNERA_SIGNATURE'] ?? '';
+
+if (!verifyWebhookSignature($payload, $signature, $_ENV['WEBHOOK_SECRET'])) {
+    http_response_code(401);
+    exit('Invalid signature');
+}
+
+$event = json_decode($payload, true);
+error_log("Received webhook: " . $event['event']);
+
+http_response_code(200);
+echo 'OK';
+?>
+```
+
+</CodeGroup>
+
+### Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Endpoint Security" icon="shield-check">
+    - Use HTTPS endpoints only
+    - Verify webhook signatures
+    - Implement rate limiting
+    - Log all webhook deliveries
+  </Card>
+  <Card title="Error Handling" icon="exclamation-triangle">
+    - Return 2xx status codes for success
+    - Return 4xx for permanent failures
+    - Return 5xx for temporary failures
+    - Implement idempotency checks
+  </Card>
+</CardGroup>
+
+## Webhook Management
+
+### List Webhooks
+
+```bash
+GET /v1/webhooks
+```
+
+### Update Webhook
+
+```bash
+PATCH /v1/webhooks/{webhook_id}
+{
+  "events": ["member.ranked", "member.joined"],
+  "active": true
+}
+```
+
+### Delete Webhook
+
+```bash
+DELETE /v1/webhooks/{webhook_id}
+```
+
+### Test Webhook
+
+```bash
+POST /v1/webhooks/{webhook_id}/test
+{
+  "event": "member.ranked"
+}
+```
+
+## Implementation Examples
+
+### Discord Bot Integration
+
+<CodeGroup>
+
+```javascript Discord.js
+const { Client, GatewayIntentBits } = require('discord.js');
+const express = require('express');
+
+const client = new Client({ 
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] 
+});
+
+const app = express();
+app.use(express.raw({ type: 'application/json' }));
+
+app.post('/webhooks/synera', async (req, res) => {
+  const signature = req.headers['x-synera-signature'];
+  const payload = req.body;
+  
+  if (!verifyWebhookSignature(payload, signature, process.env.WEBHOOK_SECRET)) {
+    return res.status(401).send('Invalid signature');
+  }
+  
+  const event = JSON.parse(payload);
+  
+  switch (event.event) {
+    case 'member.ranked':
+      await handleMemberRanked(event.data);
+      break;
+    case 'member.joined':
+      await handleMemberJoined(event.data);
+      break;
+    case 'discord.sync_completed':
+      await handleSyncCompleted(event.data);
+      break;
+  }
+  
+  res.status(200).send('OK');
+});
+
+async function handleMemberRanked(data) {
+  const channel = client.channels.cache.get('AUDIT_CHANNEL_ID');
+  
+  const embed = {
+    title: '📈 Member Ranked',
+    description: `${data.member.username} has been ranked`,
+    fields: [
+      {
+        name: 'From',
+        value: data.rank_change.from.name,
+        inline: true
+      },
+      {
+        name: 'To', 
+        value: data.rank_change.to.name,
+        inline: true
+      },
+      {
+        name: 'Reason',
+        value: data.reason || 'No reason provided',
+        inline: false
+      }
+    ],
+    color: 0x00ff00,
+    timestamp: new Date().toISOString()
+  };
+  
+  await channel.send({ embeds: [embed] });
+}
+```
+
+```python Discord.py
+import discord
+from discord.ext import commands
+from flask import Flask, request
+import json
+import os
+
+bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
+app = Flask(__name__)
+
+@app.route('/webhooks/synera', methods=['POST'])
+def handle_webhook():
+    signature = request.headers.get('X-Synera-Signature')
+    payload = request.get_data()
+    
+    if not verify_webhook_signature(payload, signature, os.getenv('WEBHOOK_SECRET')):
+        return 'Invalid signature', 401
+    
+    event = json.loads(payload)
+    
+    # Process webhook in background
+    bot.loop.create_task(process_webhook(event))
+    
+    return 'OK', 200
+
+async def process_webhook(event):
+    if event['event'] == 'member.ranked':
+        await handle_member_ranked(event['data'])
+    elif event['event'] == 'member.joined':
+        await handle_member_joined(event['data'])
+
+async def handle_member_ranked(data):
+    channel = bot.get_channel(int(os.getenv('AUDIT_CHANNEL_ID')))
+    
+    embed = discord.Embed(
+        title='📈 Member Ranked',
+        description=f"{data['member']['username']} has been ranked",
+        color=0x00ff00
+    )
+    
+    embed.add_field(
+        name='From',
+        value=data['rank_change']['from']['name'],
+        inline=True
+    )
+    
+    embed.add_field(
+        name='To',
+        value=data['rank_change']['to']['name'],
+        inline=True
+    )
+    
+    embed.add_field(
+        name='Reason',
+        value=data.get('reason', 'No reason provided'),
+        inline=False
+    )
+    
+    await channel.send(embed=embed)
+```
+
+</CodeGroup>
+
+### Database Logging
+
+```javascript
+const mysql = require('mysql2/promise');
+
+async function logWebhookEvent(event) {
+  const connection = await mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+  });
+  
+  const query = `
+    INSERT INTO webhook_events (
+      event_type, 
+      group_id, 
+      member_id, 
+      data, 
+      timestamp
+    ) VALUES (?, ?, ?, ?, ?)
+  `;
+  
+  await connection.execute(query, [
+    event.event,
+    event.group_id,
+    event.data.member?.id || null,
+    JSON.stringify(event.data),
+    event.timestamp
+  ]);
+  
+  await connection.end();
+}
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Webhook Not Receiving Events" icon="exclamation-triangle">
+    **Common Causes:**
+    - Endpoint not publicly accessible
+    - Firewall blocking requests
+    - SSL certificate issues
+    - Webhook disabled or deleted
+    
+    **Solutions:**
+    1. Test endpoint accessibility: `curl -X POST https://your-endpoint.com/webhook`
+    2. Check webhook status: `GET /v1/webhooks/{webhook_id}`
+    3. Verify SSL certificate is valid
+    4. Check webhook delivery logs
+  </Accordion>
+  
+  <Accordion title="Signature Verification Failing" icon="key">
+    **Common Causes:**
+    - Incorrect secret key
+    - Payload modification during transit
+    - Encoding issues
+    - Timing attacks
+    
+    **Solutions:**
+    1. Verify webhook secret matches
+    2. Use raw request body for verification
+    3. Check for middleware modifying payload
+    4. Use timing-safe comparison functions
+  </Accordion>
+  
+  <Accordion title="High Latency or Timeouts" icon="clock">
+    **Common Causes:**
+    - Slow endpoint processing
+    - Database bottlenecks
+    - Network issues
+    - Resource constraints
+    
+    **Solutions:**
+    1. Process webhooks asynchronously
+    2. Implement webhook queuing
+    3. Optimize database queries
+    4. Scale infrastructure as needed
+  </Accordion>
+</AccordionGroup>
+
+---
+
+<Note>
+  Webhooks have a 30-second timeout. Ensure your endpoint responds within this timeframe to avoid retries. For long-running operations, acknowledge the webhook immediately and process asynchronously.
+</Note>

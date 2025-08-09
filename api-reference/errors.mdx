@@ -1,0 +1,728 @@
+---
+title: 'Error Handling'
+description: 'Understanding and handling API errors effectively'
+---
+
+## Error Response Format
+
+All Synera API errors follow a consistent JSON structure:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "member_not_found",
+    "message": "The specified member was not found in the group",
+    "details": {
+      "user_id": "123456789",
+      "group_id": "987654321",
+      "searched_by": "discord_id"
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "request_id": "req_abc123def456",
+    "endpoint": "/v1/groups/987654321/members/123456789"
+  }
+}
+```
+
+## HTTP Status Codes
+
+<Tabs>
+  <Tab title="4xx Client Errors">
+    <AccordionGroup>
+      <Accordion title="400 Bad Request" icon="exclamation-triangle">
+        **When it occurs:** Invalid request syntax, malformed parameters, or missing required fields
+        
+        **Common causes:**
+        - Invalid JSON in request body
+        - Missing required parameters
+        - Invalid parameter values
+        - Malformed URLs
+        
+        **Example:**
+        ```json
+        {
+          "error": {
+            "code": "invalid_request",
+            "message": "Invalid request parameters",
+            "details": {
+              "invalid_fields": ["rank_id"],
+              "reason": "rank_id must be a positive integer"
+            }
+          }
+        }
+        ```
+      </Accordion>
+      
+      <Accordion title="401 Unauthorized" icon="lock">
+        **When it occurs:** Missing, invalid, or expired authentication credentials
+        
+        **Common causes:**
+        - Missing Authorization header
+        - Invalid API key format
+        - Expired API key
+        - Revoked API key
+        
+        **Example:**
+        ```json
+        {
+          "error": {
+            "code": "unauthorized",
+            "message": "Invalid API key",
+            "details": {
+              "key_status": "expired",
+              "expired_at": "2024-01-10T00:00:00Z"
+            }
+          }
+        }
+        ```
+      </Accordion>
+      
+      <Accordion title="403 Forbidden" icon="ban">
+        **When it occurs:** Valid authentication but insufficient permissions
+        
+        **Common causes:**
+        - API key lacks required permissions
+        - Attempting to access restricted resources
+        - IP address not whitelisted
+        - Rate limit restrictions
+        
+        **Example:**
+        ```json
+        {
+          "error": {
+            "code": "insufficient_permissions",
+            "message": "API key does not have permission to rank members",
+            "details": {
+              "required_permission": "members:rank",
+              "available_permissions": ["members:read", "groups:read"]
+            }
+          }
+        }
+        ```
+      </Accordion>
+      
+      <Accordion title="404 Not Found" icon="search">
+        **When it occurs:** Requested resource does not exist
+        
+        **Common causes:**
+        - Invalid group ID
+        - Member not in group
+        - Endpoint doesn't exist
+        - Resource has been deleted
+        
+        **Example:**
+        ```json
+        {
+          "error": {
+            "code": "group_not_found",
+            "message": "Group with ID 123456789 was not found",
+            "details": {
+              "group_id": "123456789",
+              "suggestion": "Verify the group ID is correct"
+            }
+          }
+        }
+        ```
+      </Accordion>
+      
+      <Accordion title="409 Conflict" icon="triangle-exclamation">
+        **When it occurs:** Request conflicts with current resource state
+        
+        **Common causes:**
+        - Attempting to rank member to same rank
+        - Duplicate resource creation
+        - Concurrent modification conflicts
+        - Business rule violations
+        
+        **Example:**
+        ```json
+        {
+          "error": {
+            "code": "rank_conflict",
+            "message": "Member is already at the specified rank",
+            "details": {
+              "current_rank": "Moderator",
+              "requested_rank": "Moderator",
+              "member_id": "123456789"
+            }
+          }
+        }
+        ```
+      </Accordion>
+      
+      <Accordion title="422 Unprocessable Entity" icon="exclamation">
+        **When it occurs:** Request is well-formed but contains semantic errors
+        
+        **Common causes:**
+        - Validation failures
+        - Business logic violations
+        - Invalid data relationships
+        - Constraint violations
+        
+        **Example:**
+        ```json
+        {
+          "error": {
+            "code": "validation_failed",
+            "message": "Request validation failed",
+            "details": {
+              "validation_errors": [
+                {
+                  "field": "rank_id",
+                  "message": "Cannot rank member higher than your own rank",
+                  "current_value": 200,
+                  "max_allowed": 150
+                }
+              ]
+            }
+          }
+        }
+        ```
+      </Accordion>
+      
+      <Accordion title="429 Too Many Requests" icon="gauge">
+        **When it occurs:** Rate limit exceeded
+        
+        **Common causes:**
+        - Too many requests in time window
+        - Burst limit exceeded
+        - Concurrent request limit reached
+        - API key specific limits
+        
+        **Example:**
+        ```json
+        {
+          "error": {
+            "code": "rate_limit_exceeded",
+            "message": "API rate limit exceeded",
+            "details": {
+              "limit": 100,
+              "remaining": 0,
+              "reset_at": "2024-01-15T10:35:00Z",
+              "retry_after": 60
+            }
+          }
+        }
+        ```
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+  
+  <Tab title="5xx Server Errors">
+    <AccordionGroup>
+      <Accordion title="500 Internal Server Error" icon="server">
+        **When it occurs:** Unexpected server-side error
+        
+        **Common causes:**
+        - Unhandled exceptions
+        - Database errors
+        - Service failures
+        - Configuration issues
+        
+        **Example:**
+        ```json
+        {
+          "error": {
+            "code": "internal_server_error",
+            "message": "An unexpected error occurred",
+            "details": {
+              "request_id": "req_abc123",
+              "support_message": "Please contact support with this request ID"
+            }
+          }
+        }
+        ```
+      </Accordion>
+      
+      <Accordion title="502 Bad Gateway" icon="network-wired">
+        **When it occurs:** Upstream service error
+        
+        **Common causes:**
+        - Roblox API unavailable
+        - Discord API issues
+        - Database connectivity problems
+        - Service dependencies down
+        
+        **Example:**
+        ```json
+        {
+          "error": {
+            "code": "upstream_service_error",
+            "message": "Roblox API is currently unavailable",
+            "details": {
+              "service": "roblox_api",
+              "status": "unavailable",
+              "retry_after": 300
+            }
+          }
+        }
+        ```
+      </Accordion>
+      
+      <Accordion title="503 Service Unavailable" icon="tools">
+        **When it occurs:** Service temporarily unavailable
+        
+        **Common causes:**
+        - Scheduled maintenance
+        - System overload
+        - Deployment in progress
+        - Emergency maintenance
+        
+        **Example:**
+        ```json
+        {
+          "error": {
+            "code": "service_unavailable",
+            "message": "Service temporarily unavailable due to maintenance",
+            "details": {
+              "maintenance_window": {
+                "start": "2024-01-15T10:00:00Z",
+                "end": "2024-01-15T12:00:00Z"
+              },
+              "retry_after": 3600
+            }
+          }
+        }
+        ```
+      </Accordion>
+      
+      <Accordion title="504 Gateway Timeout" icon="clock">
+        **When it occurs:** Request timeout
+        
+        **Common causes:**
+        - Long-running operations
+        - Slow upstream services
+        - Network connectivity issues
+        - Resource contention
+        
+        **Example:**
+        ```json
+        {
+          "error": {
+            "code": "gateway_timeout",
+            "message": "Request timed out",
+            "details": {
+              "timeout_duration": "30s",
+              "suggestion": "Try breaking large operations into smaller batches"
+            }
+          }
+        }
+        ```
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+## Error Codes Reference
+
+### Authentication Errors
+
+| Code | Description | HTTP Status |
+|------|-------------|-------------|
+| `unauthorized` | Invalid or missing API key | 401 |
+| `api_key_expired` | API key has expired | 401 |
+| `api_key_revoked` | API key has been revoked | 401 |
+| `insufficient_permissions` | API key lacks required permissions | 403 |
+| `ip_not_whitelisted` | Request from non-whitelisted IP | 403 |
+
+### Resource Errors
+
+| Code | Description | HTTP Status |
+|------|-------------|-------------|
+| `group_not_found` | Group does not exist | 404 |
+| `member_not_found` | Member not found in group | 404 |
+| `rank_not_found` | Rank does not exist in group | 404 |
+| `webhook_not_found` | Webhook configuration not found | 404 |
+
+### Validation Errors
+
+| Code | Description | HTTP Status |
+|------|-------------|-------------|
+| `invalid_request` | Malformed request | 400 |
+| `validation_failed` | Request validation failed | 422 |
+| `rank_conflict` | Rank operation conflict | 409 |
+| `hierarchy_violation` | Rank hierarchy violation | 422 |
+| `member_already_exists` | Member already in group | 409 |
+
+### Rate Limiting Errors
+
+| Code | Description | HTTP Status |
+|------|-------------|-------------|
+| `rate_limit_exceeded` | Rate limit exceeded | 429 |
+| `concurrent_limit_exceeded` | Too many concurrent requests | 429 |
+| `quota_exceeded` | Monthly quota exceeded | 429 |
+
+### Service Errors
+
+| Code | Description | HTTP Status |
+|------|-------------|-------------|
+| `internal_server_error` | Unexpected server error | 500 |
+| `upstream_service_error` | External service error | 502 |
+| `service_unavailable` | Service temporarily unavailable | 503 |
+| `gateway_timeout` | Request timeout | 504 |
+
+## Error Handling Best Practices
+
+### Retry Logic
+
+Implement intelligent retry logic for transient errors:
+
+<CodeGroup>
+```javascript JavaScript
+async function makeRequestWithRetry(url, options, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      
+      if (response.ok) {
+        return await response.json();
+      }
+      
+      const errorData = await response.json();
+      
+      // Don't retry client errors (4xx) except rate limits
+      if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+        throw new Error(`Client error: ${errorData.error.message}`);
+      }
+      
+      // Calculate retry delay with exponential backoff
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 30000);
+      
+      if (attempt < maxRetries) {
+        console.log(`Request failed, retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        throw new Error(`Max retries exceeded: ${errorData.error.message}`);
+      }
+      
+    } catch (error) {
+      if (attempt === maxRetries) {
+        throw error;
+      }
+    }
+  }
+}
+```
+
+```python Python
+import time
+import requests
+from typing import Dict, Any
+
+def make_request_with_retry(url: str, headers: Dict[str, str], max_retries: int = 3) -> Dict[str, Any]:
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = requests.get(url, headers=headers, timeout=30)
+            
+            if response.status_code == 200:
+                return response.json()
+            
+            error_data = response.json()
+            
+            # Don't retry client errors (4xx) except rate limits
+            if 400 <= response.status_code < 500 and response.status_code != 429:
+                raise Exception(f"Client error: {error_data['error']['message']}")
+            
+            # Calculate retry delay with exponential backoff
+            delay = min(2 ** (attempt - 1), 30)
+            
+            if attempt < max_retries:
+                print(f"Request failed, retrying in {delay}s...")
+                time.sleep(delay)
+            else:
+                raise Exception(f"Max retries exceeded: {error_data['error']['message']}")
+                
+        except requests.RequestException as e:
+            if attempt == max_retries:
+                raise e
+```
+</CodeGroup>
+
+### Error Classification
+
+Classify errors to handle them appropriately:
+
+```javascript
+class SyneraAPIError extends Error {
+  constructor(response, errorData) {
+    super(errorData.error.message);
+    this.name = 'SyneraAPIError';
+    this.code = errorData.error.code;
+    this.status = response.status;
+    this.details = errorData.error.details;
+    this.requestId = errorData.meta?.request_id;
+  }
+  
+  isRetryable() {
+    // Retry server errors and rate limits
+    return this.status >= 500 || this.status === 429;
+  }
+  
+  isClientError() {
+    return this.status >= 400 && this.status < 500;
+  }
+  
+  isAuthenticationError() {
+    return this.status === 401;
+  }
+  
+  isPermissionError() {
+    return this.status === 403;
+  }
+  
+  isRateLimitError() {
+    return this.status === 429;
+  }
+}
+```
+
+### Graceful Degradation
+
+Handle errors gracefully in your application:
+
+<CodeGroup>
+```javascript React Component
+function MemberList({ groupId }) {
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    async function fetchMembers() {
+      try {
+        setLoading(true);
+        const response = await syneraAPI.groups.getMembers(groupId);
+        setMembers(response.data);
+        setError(null);
+      } catch (err) {
+        if (err.isAuthenticationError()) {
+          setError('Please check your API key configuration');
+        } else if (err.isPermissionError()) {
+          setError('Insufficient permissions to view members');
+        } else if (err.isRateLimitError()) {
+          setError('Rate limit exceeded. Please try again later.');
+        } else {
+          setError('Failed to load members. Please try again.');
+        }
+        console.error('Failed to fetch members:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchMembers();
+  }, [groupId]);
+  
+  if (loading) return <div>Loading members...</div>;
+  if (error) return <div className="error">{error}</div>;
+  
+  return (
+    <div>
+      {members.map(member => (
+        <div key={member.id}>{member.username}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+```python Flask Route
+from flask import Flask, jsonify
+import logging
+
+app = Flask(__name__)
+
+@app.route('/api/members/<group_id>')
+def get_members(group_id):
+    try:
+        members = synera_client.groups.get_members(group_id)
+        return jsonify({
+            'success': True,
+            'data': members
+        })
+        
+    except SyneraAPIError as e:
+        logging.error(f"Synera API error: {e.code} - {e.message}")
+        
+        if e.is_authentication_error():
+            return jsonify({
+                'success': False,
+                'error': 'API authentication failed'
+            }), 401
+            
+        elif e.is_permission_error():
+            return jsonify({
+                'success': False,
+                'error': 'Insufficient permissions'
+            }), 403
+            
+        elif e.is_rate_limit_error():
+            return jsonify({
+                'success': False,
+                'error': 'Rate limit exceeded',
+                'retry_after': e.details.get('retry_after', 60)
+            }), 429
+            
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Service temporarily unavailable'
+            }), 503
+            
+    except Exception as e:
+        logging.error(f"Unexpected error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Internal server error'
+        }), 500
+```
+</CodeGroup>
+
+## Debugging Errors
+
+### Request ID Tracking
+
+Every API response includes a unique `request_id` that can be used for debugging:
+
+```json
+{
+  "meta": {
+    "request_id": "req_abc123def456",
+    "timestamp": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+Use this ID when contacting support for faster issue resolution.
+
+### Logging Best Practices
+
+<CodeGroup>
+```javascript JavaScript
+// Good: Log structured error information
+console.error('API request failed', {
+  requestId: error.requestId,
+  code: error.code,
+  status: error.status,
+  endpoint: '/v1/groups/123456/members',
+  timestamp: new Date().toISOString()
+});
+
+// Bad: Log sensitive information
+console.error('API request failed', {
+  apiKey: 'sk_live_...',  // Never log API keys!
+  response: fullResponse  // May contain sensitive data
+});
+```
+
+```python Python
+import logging
+
+# Configure structured logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+logger = logging.getLogger(__name__)
+
+try:
+    response = synera_client.groups.get_members(group_id)
+except SyneraAPIError as e:
+    logger.error(
+        "Synera API request failed",
+        extra={
+            'request_id': e.request_id,
+            'error_code': e.code,
+            'status_code': e.status,
+            'endpoint': f'/v1/groups/{group_id}/members'
+        }
+    )
+```
+</CodeGroup>
+
+## Error Monitoring
+
+### Health Checks
+
+Implement health checks to monitor API connectivity:
+
+```javascript
+async function healthCheck() {
+  try {
+    const response = await fetch('https://api.synera.cc/v1/health', {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`
+      }
+    });
+    
+    return {
+      status: response.ok ? 'healthy' : 'unhealthy',
+      responseTime: Date.now() - startTime,
+      statusCode: response.status
+    };
+  } catch (error) {
+    return {
+      status: 'error',
+      error: error.message
+    };
+  }
+}
+```
+
+### Error Metrics
+
+Track error rates and patterns:
+
+```javascript
+class ErrorMetrics {
+  constructor() {
+    this.errorCounts = new Map();
+    this.totalRequests = 0;
+  }
+  
+  recordError(errorCode, statusCode) {
+    const key = `${statusCode}_${errorCode}`;
+    this.errorCounts.set(key, (this.errorCounts.get(key) || 0) + 1);
+  }
+  
+  recordRequest() {
+    this.totalRequests++;
+  }
+  
+  getErrorRate() {
+    const totalErrors = Array.from(this.errorCounts.values())
+      .reduce((sum, count) => sum + count, 0);
+    return this.totalRequests > 0 ? totalErrors / this.totalRequests : 0;
+  }
+  
+  getMostCommonErrors() {
+    return Array.from(this.errorCounts.entries())
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5);
+  }
+}
+```
+
+---
+
+<Note>
+  Proper error handling is crucial for building robust applications. Always implement retry logic, log errors appropriately, and provide meaningful error messages to users.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Rate Limiting" icon="gauge" href="/api-reference/rate-limiting">
+    Learn how to handle rate limits effectively
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/api-reference/webhooks">
+    Set up real-time error notifications
+  </Card>
+  <Card title="Monitoring" icon="chart-line" href="/api-reference/monitoring">
+    Monitor your API usage and error rates
+  </Card>
+</CardGroup>
